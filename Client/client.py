@@ -31,6 +31,18 @@ class Button_class:
         text = smallfont.render(self.text , True , color_white)
         screen.blit(text , (self.loc_x, self.loc_y))
 
+class Text_class:
+    def __init__(self, loc_x, loc_y, size, text, color):
+        self.loc_x = loc_x
+        self.loc_y = loc_y
+        self.text = text
+        self.size = size
+        self.color = color
+    def draw(self, screen, color):
+        font = pygame.font.SysFont('Corbel',self.size)
+        text = smallfont.render(self.text , True , color_white)
+        screen.blit(text , (self.loc_x, self.loc_y))
+
 class InputBox:
 
     def __init__(self, x, y, w, h, text=''):
@@ -115,6 +127,11 @@ def Arm_Left():
 def Arm_Right():
     print("Moving arm right")
 
+def Camera_Left():
+    print("Moving camera left")
+
+def Camera_Right():
+    print("Moving camera right")
 
 
 
@@ -127,10 +144,12 @@ Button_class(150, 200, 70, 70, "Left", "Left"),
 Button_class(310, 200, 70, 70, "Right", "Right"),
 Button_class(460, 120, 70, 70, "Up", "Arm_up"),
 Button_class(460, 280, 70, 70, "Down", "Arm_down"),
-Button_class(620, 120, 70, 70, "Forward", "Arm_Forward"),
-Button_class(620, 280, 70, 70, "Back", "Arm_Back"),
-Button_class(540, 200, 70, 70, "Left", "Arm_Left"),
-Button_class(700, 200, 70, 70, "Right", "Arm_Right")
+Button_class(660, 120, 70, 70, "Forward", "Arm_Forward"),
+Button_class(660, 280, 70, 70, "Back", "Arm_Back"),
+Button_class(580, 200, 70, 70, "Left", "Arm_Left"),
+Button_class(740, 200, 70, 70, "Right", "Arm_Right"),
+Button_class(150, 500, 70, 70, "Left", "Camera_Left"),
+Button_class(310, 500, 70, 70, "Right", "Camera_Right")
 ]
 
 Input_boxes = [
@@ -138,7 +157,11 @@ Input_boxes = [
 # InputBox(400, 100, 140, 32)
 ]
 
-Text = 
+Texts = [
+Text_class(170, 50, 36, "Rover Controls", color_white),
+Text_class(520, 50, 36, "Arm Controls", color_white),
+Text_class(170, 430, 36, "Camera Controls", color_white)
+]
 
 
 def main_loop():
@@ -171,6 +194,8 @@ def main_loop():
             Box.update()
         for Box in Input_boxes:
             Box.draw(screen)
+        for Text in Texts:
+            Text.draw(screen, color_white)
 
         pygame.display.update()
 
