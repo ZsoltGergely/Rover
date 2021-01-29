@@ -1,6 +1,11 @@
 import pygame
 import sys
 import matplotlib
+import json
+import socket
+from random import seed
+from random import randint
+import time
 
 color_white = (255,255,255)
 color_light = (170,170,170)
@@ -10,6 +15,15 @@ COLOR_ACTIVE = pygame.Color('dodgerblue2')
 res = (1024,720)
 commands = ""
 
+cfg = open("client_config.json", "r")
+tmpconfig = cfg.read()
+cfg.close()
+config = json.loads(tmpconfig)
+
+host = config["server"]
+port = config["port"]
+
+Client = socket.socket()
 pygame.init()
 screen = pygame.display.set_mode(res)
 width = screen.get_width()
@@ -99,40 +113,88 @@ def Close_window():
 
 def Forward():
     print("Going forward")
-
+    data = "Going forward"
+    Client.send(str.encode(data))
+    res = Client.recv(1024)
+    print("Response from server: " + res.decode('utf-8'))
+    print("------------")
 def Back():
     print("Going back")
-
+    data = "Going back"
+    Client.send(str.encode(data))
+    res = Client.recv(1024)
+    print("Response from server: " + res.decode('utf-8'))
+    print("------------")
 def Left():
     print("Going left")
-
+    data = "Going left"
+    Client.send(str.encode(data))
+    res = Client.recv(1024)
+    print("Response from server: " + res.decode('utf-8'))
+    print("------------")
 def Right():
     print("Going right")
-
+    data = "Going right"
+    Client.send(str.encode(data))
+    res = Client.recv(1024)
+    print("Response from server: " + res.decode('utf-8'))
+    print("------------")
 def Arm_up():
     print("Moving arm up")
-
+    data = "Moving arm up"
+    Client.send(str.encode(data))
+    res = Client.recv(1024)
+    print("Response from server: " + res.decode('utf-8'))
+    print("------------")
 def Arm_down():
     print("Moving arm down")
-
+    data = "Moving arm down"
+    Client.send(str.encode(data))
+    res = Client.recv(1024)
+    print("Response from server: " + res.decode('utf-8'))
+    print("------------")
 def Arm_Forward():
     print("Moving arm forward")
-
+    data = "Moving arm forward"
+    Client.send(str.encode(data))
+    res = Client.recv(1024)
+    print("Response from server: " + res.decode('utf-8'))
+    print("------------")
 def Arm_Back():
     print("Moving arm back")
-
+    data = "Moving arm back"
+    Client.send(str.encode(data))
+    res = Client.recv(1024)
+    print("Response from server: " + res.decode('utf-8'))
+    print("------------")
 def Arm_Left():
     print("Moving arm left")
-
+    data = "Moving arm left"
+    Client.send(str.encode(data))
+    res = Client.recv(1024)
+    print("Response from server: " + res.decode('utf-8'))
+    print("------------")
 def Arm_Right():
     print("Moving arm right")
-
+    data = "Moving arm right"
+    Client.send(str.encode(data))
+    res = Client.recv(1024)
+    print("Response from server: " + res.decode('utf-8'))
+    print("------------")
 def Camera_Left():
     print("Moving camera left")
-
+    data = "Moving camera left"
+    Client.send(str.encode(data))
+    res = Client.recv(1024)
+    print("Response from server: " + res.decode('utf-8'))
+    print("------------")
 def Camera_Right():
     print("Moving camera right")
-
+    data = "Moving camera right"
+    Client.send(str.encode(data))
+    res = Client.recv(1024)
+    print("Response from server: " + res.decode('utf-8'))
+    print("------------")
 
 
 
@@ -200,5 +262,11 @@ def main_loop():
         pygame.display.update()
 
 if __name__ == '__main__':
+    print('Waiting for connection response')
+    try:
+        Client.connect((host, port))
+    except socket.error as e:
+        print(str(e))
+    res = Client.recv(1024)
     main_loop()
     pygame.quit()
