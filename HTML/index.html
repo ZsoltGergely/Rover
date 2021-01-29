@@ -1,0 +1,398 @@
+<html>
+	<head>
+	<style>
+
+		#Div2D {
+			display: inline-block;
+		}
+		#Div3D {
+			display: inline-block;
+		}
+		#MyDiv {
+			display: inline-block;
+		}
+	</style>
+	<script src="../JS/plotly-latest.min.js"></script>
+</head>
+
+<body>
+
+
+	<div id="Div2D" ></div>
+	<div id="Div3D" ></div>
+	<div id="MyDiv" ></div>
+
+
+	<input type=button onclick="Stop()" id="gomb" value="Start" />
+	<input type=button onclick="Line()" id="vonal" value="Line On" />
+
+
+
+	<script>
+
+    $(function() {
+        var msgFromServer;
+        $.get( "/sample-api", function( data ) {
+            msgFromServer = data.text;
+            alert( "Received data from server!" );
+        });
+    });
+// var Gyro_x = [];
+// var Gyro_y = [];
+// var Gyro_z = [];
+//
+// var Magneto_x = [];
+// var Magneto_y = [];
+// var Magneto_z = [];
+//
+// var Acc_x = [];
+// var Acc_y = [];
+// var Acc_z = [];
+//
+// var t_x = [];
+// var t=0;
+// var y_max_1=0;
+// var y_max_2=0;
+//
+// var Pressure = [];
+// var Temperature = [];
+// var Humidity = [];
+//
+// var UV=[];
+// var Visible=[];
+// var IR=[];
+//
+//
+// var timer_3d;
+// var timer_2d;
+//
+//
+// function Line()
+// {
+// 	if(document.getElementById("vonal").value=="Line On")
+// 	{
+// 		var update = {
+// 			mode:"markers"
+// 		};
+// 		Plotly.restyle("Div2D", update);
+// 		Plotly.restyle("Div3D", update);
+// 		Plotly.restyle("MyDiv", update);
+// 		//CreateGraph3d("Nyomás","Div3D","markers");
+// 		//CreateGraph2d("Nyomás","Div2D","markers");
+// 		document.getElementById("vonal").value="Line Off"
+// 	}
+// 	else if(document.getElementById("vonal").value=="Line Off")
+// 	{
+// 		var update = {
+// 			mode:"lines+markers"
+// 		};
+// 		Plotly.restyle("Div2D", update);
+// 		Plotly.restyle("Div3D", update);
+// 		Plotly.restyle("MyDiv", update);
+// 		//CreateGraph3d("Nyomás","Div3D","lines+markers");
+// 		//CreateGraph2d("Nyomás","Div2D","lines+markers");
+// 		document.getElementById("vonal").value="Line On"
+// 	}
+// }
+// function Stop()
+// {
+//
+// 	if(document.getElementById("gomb").value=="Start")
+// 	{
+//
+// 		timer=setInterval(function(){
+// 			UpdateGraph3d();
+// 			UpdateGraph2d();
+// 			//UpdateGraphLight("MyDiv")
+// 		},1000);
+// 		document.getElementById("gomb").value="Stop";
+//
+//
+// 	}
+// 	else if(document.getElementById("gomb").value=="Stop")
+// 	{
+// 		clearInterval(timer);
+// 		document.getElementById("gomb").value="Start";
+// 	}
+//
+// }
+//
+// function UpdateGraph3d()
+// {
+// 	var x0=Math.random()*100;
+// 	var y0=Math.random()*100;
+// 	var z0=Math.random()*100;
+//
+// 	var x1=Math.random()*100;
+// 	var y1=Math.random()*100;
+// 	var z1=Math.random()*100;
+//
+// 	var x2=Math.random()*100;
+// 	var y2=Math.random()*100;
+// 	var z2=Math.random()*100;
+//
+//
+// 	Gyro_x.push(x0);
+// 	Gyro_y.push(y0);
+// 	Gyro_z.push(z0);
+//
+// 	Magneto_x.push(x1);
+// 	Magneto_y.push(y1);
+// 	Magneto_z.push(z1);
+//
+// 	Acc_x.push(x2);
+// 	Acc_y.push(y2);
+// 	Acc_z.push(z2);
+//
+// 	var data_update = {
+// 		y: [[y0],[y1],[y2]],
+// 		x: [[x0],[x1],[x2]],
+// 		z: [[z0],[z1],[z2]]
+// 	};
+// 	Plotly.animate("Div3D",data_update,[0,1,2]);
+// }
+// function UpdateGraph2d()
+// {
+//
+// 	var x0;
+// 	var Press=Math.random()*100;
+// 	var Temp=Math.random()*100;
+// 	var Hum=Math.random()*100;
+//
+// 	var U=Math.random()*100;
+// 	var V=Math.random()*100;
+// 	var I=Math.random()*100;
+//
+// 	if(Press>y_max_1) y_max_1=Press;
+// 	if(Temp>y_max_1) y_max_1=Temp;
+// 	if(Hum>y_max_1) y_max_1=Hum;
+//
+// 	if(U>y_max_2) y_max_2=U;
+// 	if(V>y_max_2) y_max_2=V;
+// 	if(I>y_max_2) y_max_2=I;
+//
+// 	t_x.push(t);
+//
+// 	Pressure.push(Press);
+// 	Temperature.push(Temp);
+// 	Humidity.push(Hum);
+//
+// 	UV.push(U);
+// 	Visible.push(V);
+// 	IR.push(I);
+//
+//
+// 	var data_update = {
+// 		y: [[Press],[Temp],[Hum]],
+// 		x: [[t],[t],[t]]
+// 	};
+// 	Plotly.extendTraces("Div2D",data_update,[0,1,2]);
+//
+// 	data_update = {
+// 		y: [[U],[V],[I]],
+// 		x: [[t],[t],[t]]
+// 	};
+// 	Plotly.extendTraces("MyDiv",data_update,[0,1,2]);
+//
+// 	if(t>10) x0=t-10;
+// 	else x0=0;
+//
+// 	var update = {
+// 			xaxis: {
+// 			range: [x0,t]
+// 		  },
+// 		  yaxis: {
+// 			range: [0,y_max_1]
+// 		  }
+// 		};
+// 		Plotly.relayout("Div2D", update);
+// 	update = {
+// 			xaxis: {
+// 			range: [x0,t]
+// 		  },
+// 		  yaxis: {
+// 			range: [0,y_max_2]
+// 		  }
+// 		};
+// 	Plotly.relayout("MyDiv", update);
+//
+// 	t++;
+//
+// }
+// function CreateGraph2d(div,mode,name0,name1,name2,t0,t1,t2)
+// {
+// 	var trace0={
+// 	  type: 'scatter',
+// 	  mode: mode,
+// 	  name: name0,
+// 	  x: t_x,
+// 	  y: t0,
+// 	  line: {
+// 		width: 1,
+// 		color: "red",
+// 		},
+// 	  marker: {
+// 		size: 3.5,
+// 		color: "red",
+//
+// 		}
+//
+// 	  };
+// 	var trace1={
+// 	  type: 'scatter',
+// 	  mode: mode,
+// 	  name: name1,
+// 	  x: t_x,
+// 	  y: t1,
+// 	  line: {
+// 		width: 1,
+// 		color: "blue",
+// 		},
+// 	  marker: {
+// 		size: 3.5,
+// 		color: "blue",
+//
+// 		}
+//
+// 	  };
+// 	var trace2={
+// 	  type: 'scatter',
+// 	  mode: mode,
+// 	  name: name2,
+// 	  x:t_x,
+// 	  y: t2,
+// 	  line: {
+// 		width: 1,
+// 		color: "green",
+// 		},
+// 	  marker: {
+// 		size: 3.5,
+// 		color: "green",
+//
+// 		}
+//
+// 	  };
+//
+//
+// 	data=[trace0,trace1,trace2];
+//
+// 	var layout = {
+// 		  autosize: false,
+// 		  width: 500,
+// 		  height: 500,
+// 		  margin: {
+// 			l: 50,
+// 			r: 0,
+// 			b: 50,
+// 			t: 150
+// 		  },
+// 		  yaxis: {
+// 			range: [0,100]
+// 		  }
+// 		};
+// 	var config = {
+// 			responsive: true,
+// 			displaylogo:false
+// 		};
+// 	Plotly.newPlot(div,data, layout, config);
+//
+// }
+// function CreateGraph3d(div,mode)
+// {
+// 	//x.push(0);
+// 	//y.push(0);
+// 	//z.push(0);
+// 	//c.push(0);
+//
+// 	var trace0={
+// 	  type: 'scatter3d',
+// 	  mode: mode,
+// 	  name:"Gyro",
+// 	  visible: true,
+// 	  x: Gyro_x,
+// 	  y: Gyro_y,
+// 	  z: Gyro_z,
+//
+// 	  line: {
+// 		width: 2,
+// 		color: "red",
+// 		},
+// 	  marker: {
+// 		size: 3.5,
+// 		color: "red",
+//
+// 		}
+//
+// 	  };
+//
+// 	  var trace1={
+// 	  type: 'scatter3d',
+// 	  mode: mode,
+// 	  name:"Magneto",
+// 	  visible:"legendonly",
+// 	  x: Magneto_x,
+// 	  y: Magneto_y,
+// 	  z: Magneto_z,
+//
+// 	  line: {
+// 		width: 2,
+// 		color: "blue",
+// 		},
+// 	  marker: {
+// 		size: 3.5,
+// 		color: "blue",
+//
+// 		}
+//
+// 	  };
+//
+// 	  var trace2={
+// 	  type: 'scatter3d',
+// 	  mode: mode,
+// 	  name:"Acc",
+// 	  visible:"legendonly",
+// 	  x: Acc_x,
+// 	  y: Acc_y,
+// 	  z: Acc_z,
+//
+// 	  line: {
+// 		width: 2,
+// 		color: "green",
+// 		},
+// 	  marker: {
+// 		size: 3.5,
+// 		color: "green",
+//
+// 		}
+//
+// 	  };
+//
+// 	  data=[trace0,trace1,trace2];
+//
+// 		 var layout = {
+// 		  autosize: false,
+// 		  width: 500,
+// 		  height: 500,
+// 		  margin: {
+// 			l: 0,
+// 			r: 0,
+// 			b: 50,
+// 			t: 100
+// 		  }
+// 		};
+//
+// 		var config = {
+// 			responsive:true,
+// 			displaylogo:false
+// 		};
+// 		Plotly.newPlot(div, data, layout,config);
+// 	}
+// 	CreateGraph3d("Div3D","lines+markers");
+// 	CreateGraph2d("Div2D","lines+markers","Pressure","Temperature","Humidity",Pressure,Temperature,Humidity);
+// 	CreateGraph2d("MyDiv","lines+markers","UV","Visible","IR",UV,Visible,IR);
+// 	Stop();
+//
+	</script>
+
+</body>
+</html>
