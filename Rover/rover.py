@@ -1,6 +1,13 @@
 import mysql.connector
 from flask import Flask, request, jsonify
 import json
+import traceback
+from _thread import *
+import time
+import socket
+
+
+
 
 # random
 from random import seed
@@ -17,6 +24,8 @@ db_host = config["db_host"]
 db_user = config["db_user"]
 db_pass = config["db_pass"]
 db = config["db"]
+socket_host = config["server"]
+socket_port = config["port"]
 
 mydb = mysql.connector.connect(
     host=db_host,
@@ -25,18 +34,11 @@ mydb = mysql.connector.connect(
     database=db
 )
 
-mycursor = mydb.cursor(buffered=True)
 
+mycursor = mydb.cursor(buffered=True)
+ClientSocket = socket.socket()
 
 seed(1)
-
-app = Flask(__name__)
-
-@app.route('/', methods = ['GET', 'POST'])
-def index():
-    data = request.json
-    print(request.json)
-    return jsonify(data)
 
 
 def get_enviroment():
@@ -74,18 +76,53 @@ def get_air():
 
     return eco2, tvoc
 
+def upload_loop():
+    while True:
+        presssure, temperature, humidity = get_enviroment()
+        gyro_x, gyro_y, gyro_z, = get_gyro()
+        uv_index, ir_light, visible_light = get_light()
+        eco2, tvoc = get_air()
+        try:
+            sql_query = "INSERT INTO `sensor_data`(`presssure`, `temperature`, `humidity`, `gyro_x`, `gyro_y`, `gyro_z`, `uv_index`, `ir_light`, `visible_light`, `eco2`, `tvoc`) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}');"
+            mycursor.execute(sql_query.format(presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
+            mydb.commit()
+            # print(sql_query.format(presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
+        except Exception:
+            print("Error connecting to DB")
+            print("------------------------")
+            print(traceback.format_exc())
+            print("------------------------")
+            print("Reconnecting...")
+            mydb.reconnect()
+            print("------------------------")
+            sql_query = "INSERT INTO `sensor_data`(`presssure`, `temperature`, `humidity`, `gyro_x`, `gyro_y`, `gyro_z`, `uv_index`, `ir_light`, `visible_light`, `eco2`, `tvoc`) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}');"
+            mycursor.execute(sql_query.format(presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
+            mydb.commit()
+            # print(sql_query.format(presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
+
+        time.sleep(1)
+        # print("------------------------")
+
+def control_loop():
+    while True:
+        print("Waiting for commands...")
+        command = ClientSocket.recv(1024)
+        print(command.decode('utf-8'))
+        print("waiting 2 seconds")
+        time.sleep(2)
+        ClientSocket.send(command)
+        print("Response sent!")
 
 
 
-for i in range(10):
-    presssure, temperature, humidity = get_enviroment()
-    gyro_x, gyro_y, gyro_z, = get_gyro()
-    uv_index, ir_light, visible_light = get_light()
-    eco2, tvoc = get_air()
-
-    sql_query = "INSERT INTO `sensor_data`(`presssure`, `temperature`, `humidity`, `gyro_x`, `gyro_y`, `gyro_z`, `uv_index`, `ir_light`, `visible_light`, `eco2`, `tvoc`) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}');"
-    mycursor.execute(sql_query.format(presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
-    mydb.commit()
 
 if __name__ == '__main__':
-    app.run(host = '0.0.0.0',  port = 5000)
+    print("Starting db upload thread.")
+    start_new_thread(upload_loop, ())
+    print("Connecting to socket.")
+    try:
+        ClientSocket.connect((socket_host, socket_port))
+    except socket.error as e:
+        print(str(e))
+    print("Starting control thread.")
+    control_loop()

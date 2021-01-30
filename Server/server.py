@@ -14,17 +14,27 @@ id = 0
 client_port = config["client_port"]
 rover_port = config["rover_port"]
 host = '0.0.0.0'
+rover_host = '127.0.0.1'
 ThreadCount = 0
 ClientSocket = socket.socket()
+RoverSocket = socket.socket()
 
 class Command_class:
     def __init__(self, id, command):
         self.id = id
         self.command = command
 
-    def execute(self):
-        eval(self.command)
-
+    def execute(self, connection):
+        connection.sendall(str.encode(self.command))
+        print("Sent: " + self.command)
+        data = connection.recv(2048)
+        data_str = data.decode('utf-8')
+        print ("Received: " + data_str)
+        if data_str == self.command:
+            return True
+        else:
+            return False
+        print("------------")
 
 def Forward():
     print("Going forward 10")
@@ -43,14 +53,22 @@ def Right():
     print("------------")
 
 
-def start_socket():
+def start_sockets():
     try:
         ClientSocket.bind((host, client_port))
     except socket.error as e:
         print(str(e))
 
-    print('Socket is listening..')
+    print('Client Socket is listening..')
     ClientSocket.listen(5)
+
+    try:
+        RoverSocket.bind((host, rover_port))
+    except socket.error as e:
+        print(str(e))
+
+    print('Rover Socket is listening..')
+    RoverSocket.listen(5)
 
 def client_session(connection):
     connection.send(str.encode('Server is working:'))
@@ -70,16 +88,24 @@ def client_session(connection):
                 connection.sendall("DATA INVALID : " + str.encode(data_str))
     connection.close()
 
+
 def handle_clients():
     global ThreadCount
     while True:
-        Client, address = ServerSideSocket.accept()
-        print('Connected to: ' + address[0] + ':' + str(address[1]))
+        Client, client_address = ClientSocket.accept()
+        print('Connected to: ' + client_address[0] + ':' + str(client_address[1]))
         start_new_thread(client_session, (Client, ))
         ThreadCount += 1
         print('Thread Number: ' + str(ThreadCount))
 
-def execute_commands():
+def handle_rover():
+    while True:
+        Rover, rover_address = RoverSocket.accept()
+        print('Rover connected from: ' + rover_address[0] + ':' + str(rover_address[1]))
+        start_new_thread(execute_commands, (Rover, ))
+
+
+def execute_commands(connection):
     while True:
         id_list = []
         if len(commands)!= 0:
@@ -88,13 +114,22 @@ def execute_commands():
             for command in commands:
                 if command.id == min(id_list):
                     print("Running command with id: " + str(command.id))
-                    command.execute()
+                    tries = 0
+                    # command.execute(connection)
+                    while command.execute(connection) != True:
+                        tries += 1
+                        if tries == 5:
+                            print("Transfer unsuccessfull: " + str(command))
                     commands.remove(command)
 
 
 
+
 if __name__ == '__main__':
-    start_socket()
+    start_sockets()
     start_new_thread(handle_clients, ())
-    execute_commands()
-    ServerSideSocket.close()
+    handle_rover()
+
+
+    ClientSocket.close()
+    RoverSocket.close()
