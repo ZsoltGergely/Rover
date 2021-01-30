@@ -3,6 +3,7 @@ import os
 from _thread import *
 import time
 import json
+import sys
 
 cfg = open("server_config.json", "r")
 tmpconfig = cfg.read()
@@ -24,34 +25,21 @@ class Command_class:
         self.id = id
         self.command = command
 
-    def execute(self, connection):
-        connection.sendall(str.encode(self.command))
-        print("Sent: " + self.command)
-        data = connection.recv(2048)
-        data_str = data.decode('utf-8')
-        print ("Received: " + data_str)
-        if data_str == self.command:
-            return True
-        else:
-            return False
-        print("------------")
+    def execute(self, rover_connection):
+        try:
+            rover_connection.sendall(str.encode(self.command))
+            print("Sent: " + self.command)
+            data = rover_connection.recv(2048)
+            data_str = data.decode('utf-8')
+            print ("Received: " + data_str)
+            if data_str == self.command:
+                return True
+            else:
+                return False
 
-def Forward():
-    print("Going forward 10")
-    time.sleep(10)
-    print("------------")
-def Back():
-    print("Going back 0")
-    print("------------")
-def Left():
-    print("Going left 5")
-    time.sleep(5)
-    print("------------")
-def Right():
-    print("Going Right 2")
-    time.sleep(2)
-    print("------------")
-
+        except socket.error:
+            print ("Rover down")
+            sys.exit()
 
 def start_sockets():
     try:
@@ -70,11 +58,11 @@ def start_sockets():
     print('Rover Socket is listening..')
     RoverSocket.listen(5)
 
-def client_session(connection):
-    connection.send(str.encode('Server is working:'))
+def client_session(client_connection):
+    client_connection.send(str.encode('Server is working:'))
     global id
     while True:
-        data = connection.recv(2048)
+        data = client_connection.recv(2048)
         data_str = data.decode('utf-8')
         # print(data_str)
         if not data:
@@ -83,10 +71,10 @@ def client_session(connection):
             if 1==1: #if command is valid
                 commands.append(Command_class(id, data_str))
                 id += 1
-                connection.sendall(str.encode(data_str))
+                client_connection.sendall(str.encode(data_str))
             else:
-                connection.sendall("DATA INVALID : " + str.encode(data_str))
-    connection.close()
+                client_connection.sendall("DATA INVALID : " + str.encode(data_str))
+    client_connection.close()
 
 
 def handle_clients():
@@ -102,10 +90,10 @@ def handle_rover():
     while True:
         Rover, rover_address = RoverSocket.accept()
         print('Rover connected from: ' + rover_address[0] + ':' + str(rover_address[1]))
-        start_new_thread(execute_commands, (Rover, ))
+        start_new_thread(send_commands, (Rover, ))
 
 
-def execute_commands(connection):
+def send_commands(rover_connection):
     while True:
         id_list = []
         if len(commands)!= 0:
@@ -116,14 +104,11 @@ def execute_commands(connection):
                     print("Running command with id: " + str(command.id))
                     tries = 0
                     # command.execute(connection)
-                    while command.execute(connection) != True:
+                    while command.execute(rover_connection) != True:
                         tries += 1
                         if tries == 5:
                             print("Transfer unsuccessfull: " + str(command))
                     commands.remove(command)
-
-
-
 
 if __name__ == '__main__':
     start_sockets()
