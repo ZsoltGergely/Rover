@@ -1,10 +1,7 @@
 import pygame
 import sys
-import matplotlib
 import json
 import socket
-from random import seed
-from random import randint
 import time
 from _thread import *
 
@@ -57,7 +54,7 @@ class Text_class:
         self.color = color
     def draw(self, screen, color):
         font = pygame.font.SysFont('Corbel',self.size)
-        text = smallfont.render(self.text , True , color_white)
+        text = font.render(self.text , True , color_white)
         screen.blit(text , (self.loc_x, self.loc_y))
 
 class InputBox:
@@ -108,97 +105,22 @@ class InputBox:
         pygame.draw.rect(screen, self.color, self.rect, 2)
 
 
+Commands_in_file = []
 
-
-def Close_window():
-    print("Yes")
-    pygame.quit()
-
-def Forward():
-    print("Going forward")
-    data = "Forward()"
-    Client.send(str.encode(data))
-    res = Client.recv(2048)
-    print("Response from server: " + res.decode('utf-8'))
-    print("------------")
-def Back():
-    print("Going back")
-    data = "Back()"
-    Client.send(str.encode(data))
-    res = Client.recv(2048)
-    print("Response from server: " + res.decode('utf-8'))
-    print("------------")
-def Left():
-    print("Going left")
-    data = "Left()"
-    Client.send(str.encode(data))
-    res = Client.recv(2048)
-    print("Response from server: " + res.decode('utf-8'))
-    print("------------")
-def Right():
-    print("Going right")
-    data = "Right()"
-    Client.send(str.encode(data))
-    res = Client.recv(2048)
-    print("Response from server: " + res.decode('utf-8'))
-    print("------------")
-def Arm_up():
-    print("Moving arm up")
-    data = "Moving arm up"
-    Client.send(str.encode(data))
-    res = Client.recv(2048)
-    print("Response from server: " + res.decode('utf-8'))
-    print("------------")
-def Arm_down():
-    print("Moving arm down")
-    data = "Moving arm down"
-    Client.send(str.encode(data))
-    res = Client.recv(2048)
-    print("Response from server: " + res.decode('utf-8'))
-    print("------------")
-def Arm_Forward():
-    print("Moving arm forward")
-    data = "Moving arm forward"
-    Client.send(str.encode(data))
-    res = Client.recv(2048)
-    print("Response from server: " + res.decode('utf-8'))
-    print("------------")
-def Arm_Back():
-    print("Moving arm back")
-    data = "Moving arm back"
-    Client.send(str.encode(data))
-    res = Client.recv(2048)
-    print("Response from server: " + res.decode('utf-8'))
-    print("------------")
-def Arm_Left():
-    print("Moving arm left")
-    data = "Moving arm left"
-    Client.send(str.encode(data))
-    res = Client.recv(2048)
-    print("Response from server: " + res.decode('utf-8'))
-    print("------------")
-def Arm_Right():
-    print("Moving arm right")
-    data = "Moving arm right"
-    Client.send(str.encode(data))
-    res = Client.recv(2048)
-    print("Response from server: " + res.decode('utf-8'))
-    print("------------")
-def Camera_Left():
-    print("Moving camera left")
-    data = "Moving camera left"
-    Client.send(str.encode(data))
-    res = Client.recv(2048)
-    print("Response from server: " + res.decode('utf-8'))
-    print("------------")
-def Camera_Right():
-    print("Moving camera right")
-    data = "Moving camera right"
-    Client.send(str.encode(data))
-    res = Client.recv(2048)
-    print("Response from server: " + res.decode('utf-8'))
-    print("------------")
-
+Valid_commands =[
+"Forward()",
+"Back()",
+"Left()",
+"Right()",
+"Arm_up()",
+"Arm_down()",
+"Arm_Forward()",
+"Arm_Back()",
+"Arm_Left()",
+"Arm_Right()",
+"Camera_Left()",
+"Camera_Right()"
+]
 
 
 Buttons = [
@@ -214,13 +136,16 @@ Button_class(660, 280, 70, 70, "Back", "Arm_Back"),
 Button_class(580, 200, 70, 70, "Left", "Arm_Left"),
 Button_class(740, 200, 70, 70, "Right", "Arm_Right"),
 Button_class(150, 500, 70, 70, "Left", "Camera_Left"),
-Button_class(310, 500, 70, 70, "Right", "Camera_Right")
+Button_class(310, 500, 70, 70, "Right", "Camera_Right"),
+Button_class(850, 670, 120, 40, "Read File", "Read_from_file")
 ]
+
 
 Input_boxes = [
 
 # InputBox(400, 100, 140, 32)
 ]
+
 
 Texts = [
 Text_class(170, 50, 36, "Rover Controls", color_white),
@@ -228,6 +153,40 @@ Text_class(520, 50, 36, "Arm Controls", color_white),
 Text_class(170, 430, 36, "Camera Controls", color_white)
 ]
 
+def Close_window():
+    print("Closing Client")
+    pygame.quit()
+
+def Check_commands():
+    global Commands_in_file
+    Commands_in_file = []
+    input_file = open("commands.txt", "r")
+    check = True
+    y = 20
+    for line in input_file:
+
+        if line.rstrip() not in Valid_commands:
+            print("not okay")
+            Commands_in_file.append(Text_class(820, y, 16, line.rstrip() + "  <----", color_white))
+            check = False
+        else:
+            Commands_in_file.append(Text_class(820, y, 16, line.rstrip(), color_white))
+            print("okay")
+        y += 18
+    input_file.close()
+    return check
+
+def Read_from_file():
+
+    if Check_commands() == True:
+        input_file = open("commands.txt", "r")
+        for line in input_file:
+            print("yay")
+            data = line.rstrip()
+            Client.send(str.encode(data))
+            print("Sent from file: " + data)
+            time.sleep(0.1)
+        input_file.close()
 
 def main_loop():
     while True:
@@ -241,7 +200,10 @@ def main_loop():
             if ev.type == pygame.MOUSEBUTTONDOWN:
                 for Button in Buttons:
                     if Button.loc_x <= mouse[0] <= Button.loc_x + Button.size_x and Button.loc_y <= mouse[1] <= Button.loc_y + Button.size_y:
-                        eval(Button.function + "()")
+                        if Button.function + "()" in Valid_commands:
+                            Client.send(str.encode(Button.function + "()"))
+                        else:
+                            eval(Button.function + "()")
             for Box in Input_boxes:
                 Box.handle_event(ev)
 
@@ -261,6 +223,8 @@ def main_loop():
             Box.draw(screen)
         for Text in Texts:
             Text.draw(screen, color_white)
+        for Command_in_file in Commands_in_file:
+            Command_in_file.draw(screen, color_white)
 
         pygame.display.update()
 
