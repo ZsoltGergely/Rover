@@ -113,28 +113,28 @@ def Close_window():
 
 def Forward():
     print("Going forward")
-    data = "Going forward"
+    data = "Forward()"
     Client.send(str.encode(data))
     res = Client.recv(1024)
     print("Response from server: " + res.decode('utf-8'))
     print("------------")
 def Back():
     print("Going back")
-    data = "Going back"
+    data = "Back()"
     Client.send(str.encode(data))
     res = Client.recv(1024)
     print("Response from server: " + res.decode('utf-8'))
     print("------------")
 def Left():
     print("Going left")
-    data = "Going left"
+    data = "Left()"
     Client.send(str.encode(data))
     res = Client.recv(1024)
     print("Response from server: " + res.decode('utf-8'))
     print("------------")
 def Right():
     print("Going right")
-    data = "Going right"
+    data = "Right()"
     Client.send(str.encode(data))
     res = Client.recv(1024)
     print("Response from server: " + res.decode('utf-8'))
