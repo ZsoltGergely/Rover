@@ -41,7 +41,7 @@ Valid_commands =[
 ]
 
 def line_valid(command):
-    command = command[-2:-1]
+    print(command)
     split = command.split("(")
     if split[0]+"()" in Valid_commands:
         try:
@@ -146,7 +146,5 @@ if __name__ == '__main__':
     start_sockets()
     start_new_thread(handle_clients, ())
     handle_rover()
-
-
     ClientSocket.close()
     RoverSocket.close()
