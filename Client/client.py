@@ -4,6 +4,7 @@ import json
 import socket
 import time
 from _thread import *
+from cryptography.fernet import Fernet
 
 color_white = (255,255,255)
 color_light = (170,170,170)
@@ -23,6 +24,8 @@ config = json.loads(tmpconfig)
 
 host = config["server"]
 port = config["port"]
+key = config["key"]
+
 
 Client = socket.socket()
 pygame.init()
@@ -31,7 +34,7 @@ width = screen.get_width()
 height = screen.get_height()
 smallfont = pygame.font.SysFont('Corbel',32)
 tinyfont = pygame.font.SysFont('Corbel',12)
-
+crypto = Fernet(key)
 
 class Button_class:
     def __init__(self, loc_x, loc_y, size_x, size_y, text, function):
@@ -196,7 +199,8 @@ def Read_from_file():
             Client.send(str.encode(data))
             print("Sent from file: " + data + "\n" + "Waiting for response...")
             res = Client.recv(2048)
-            print(res.decode('utf-8'))
+            decrypted_message = crypto.decrypt(res)
+            print(decrypted_message)
             time.sleep(0.1)
         Commands_in_file.append(Text_class(820, command_output_height, 18,"Data transfer successfull", color_white))
         input_file.close()
