@@ -205,7 +205,7 @@ def Close_window():
 
 def line_valid(command):
     split = command.split("(")
-    if split[0]+"()" in Valid_commands:
+    if split[0]+"()" in Rover_commands or split[0]+"()" in Arm_commands or split[0]+"()" in Camera_commands:
         try:
             int(split[1][:-1])
             return True
@@ -262,14 +262,29 @@ def main_loop():
                 for Button in Buttons:
                     if Button.loc_x <= mouse[0] <= Button.loc_x + Button.size_x and Button.loc_y <= mouse[1] <= Button.loc_y + Button.size_y:
                         if Button.function + "()" in Rover_commands:
-                            Client.send(str.encode(Button.function + "(" + str(Rover_move) + ")"))
+                            data = Button.function + "(" + str(Rover_move) + ")"
+                            Client.send(str.encode(data))
+                            print("Sent from file: " + data + "\n" + "Waiting for response...")
+
+                            res = Client.recv(2048)
+                            decrypted_message = crypto.decrypt(res)
+                            print(decrypted_message)
                             
                         elif Button.function + "()" in Arm_commands:
-                            Client.send(str.encode(Button.function + "(" + str(Arm_move) + ")"))
+                            data = Button.function + "(" + str(Rover_move) + ")"
+                            Client.send(str.encode(data))
+                            print("Sent from file: " + data + "\n" + "Waiting for response...")
+                            res = Client.recv(2048)
+                            decrypted_message = crypto.decrypt(res)
+                            print(decrypted_message)
                             
                         elif Button.function + "()" in Camera_commands:
-                            Client.send(str.encode(Button.function + "(" + str(Cam_deg) + ")"))
-                            
+                            data = Button.function + "(" + str(Rover_move) + ")"
+                            Client.send(str.encode(data))
+                            print("Sent from file: " + data + "\n" + "Waiting for response...")
+                            res = Client.recv(2048)
+                            decrypted_message = crypto.decrypt(res)
+                            print(decrypted_message)
                         else:
                             eval(Button.function + "()")
             for Box in Input_boxes:
