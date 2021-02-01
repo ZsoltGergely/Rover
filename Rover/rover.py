@@ -1,152 +1,128 @@
-import socket
-import os
+import mysql.connector
+from flask import Flask, request, jsonify
+import json
+import traceback
 from _thread import *
 import time
-import json
-import sys
-from cryptography.fernet import Fernet
+import socket
 
 
-cfg = open("server_config.json", "r")
+
+
+# random
+from random import seed
+from random import randint
+# random
+
+cfg = open("rover_config.json", "r")
 tmpconfig = cfg.read()
 cfg.close()
 config = json.loads(tmpconfig)
-commands = []
-id = 0
 
-client_port = config["client_port"]
-rover_port = config["rover_port"]
-key = config["key"]
 
-host = '0.0.0.0'
-rover_host = '127.0.0.1'
-ThreadCount = 0
+db_host = config["db_host"]
+db_user = config["db_user"]
+db_pass = config["db_pass"]
+db = config["db"]
+socket_host = config["server"]
+socket_port = config["port"]
+
+mydb = mysql.connector.connect(
+    host=db_host,
+    user=db_user,
+    password=db_pass,
+    database=db
+)
+
+
+mycursor = mydb.cursor(buffered=True)
 ClientSocket = socket.socket()
-RoverSocket = socket.socket()
-crypto = Fernet(key)
 
-Valid_commands =[
-"Forward()",
-"Back()",
-"Left()",
-"Right()",
-"Arm_up()",
-"Arm_down()",
-"Arm_Forward()",
-"Arm_Back()",
-"Arm_Left()",
-"Arm_Right()",
-"Camera_Left()",
-"Camera_Right()"
-]
+seed(1)
 
-def line_valid(command):
-    command = command[-2:-1]
-    split = command.split("(")
-    if split[0]+"()" in Valid_commands:
+
+def get_enviroment():
+
+    presssure = randint(0, 50)
+    temperature = randint(50, 100)
+    humidity = randint(0, 10)
+
+
+    return presssure, temperature, humidity
+
+def get_gyro():
+
+    gyro_x = randint(3000, 5000)
+    gyro_y = randint(3000, 5000)
+    gyro_z = randint(3000, 5000)
+
+
+    return gyro_x, gyro_y, gyro_z
+
+def get_light():
+
+    uv_index =  randint(0, 10)
+    ir_light = randint(0, 100)
+    visible_light = randint(0, 100)
+
+
+    return uv_index, ir_light, visible_light
+
+def get_air():
+
+    eco2 = randint(0, 100)
+    tvoc = randint(0, 100)
+
+
+    return eco2, tvoc
+
+def upload_loop():
+    while True:
+        presssure, temperature, humidity = get_enviroment()
+        gyro_x, gyro_y, gyro_z, = get_gyro()
+        uv_index, ir_light, visible_light = get_light()
+        eco2, tvoc = get_air()
         try:
-            int(split[1][:-1])
-            return True
-        except ValueError:
-            return False
+            sql_query = "INSERT INTO `sensor_data`(`presssure`, `temperature`, `humidity`, `gyro_x`, `gyro_y`, `gyro_z`, `uv_index`, `ir_light`, `visible_light`, `eco2`, `tvoc`) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}');"
+            mycursor.execute(sql_query.format(presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
+            mydb.commit()
+            # print(sql_query.format(presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
+        except Exception:
+            print("Error connecting to DB")
+            print("------------------------")
+            print(traceback.format_exc())
+            print("------------------------")
+            print("Reconnecting...")
+            mydb.reconnect()
+            print("------------------------")
+            sql_query = "INSERT INTO `sensor_data`(`presssure`, `temperature`, `humidity`, `gyro_x`, `gyro_y`, `gyro_z`, `uv_index`, `ir_light`, `visible_light`, `eco2`, `tvoc`) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}');"
+            mycursor.execute(sql_query.format(presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
+            mydb.commit()
+            # print(sql_query.format(presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
 
-class Command_class:
-    def __init__(self, id, command):
-        self.id = id
-        self.command = command
+        time.sleep(1)
+        # print("------------------------")
 
-    def execute(self, rover_connection):
-        try:
-            rover_connection.sendall(str.encode(self.command))
-            print("Sent: " + self.command)
-            data = rover_connection.recv(2048)
-            data_str = data.decode('utf-8')
-            print ("Received: " + data_str)
-            if data_str == self.command:
-                return True
-            else:
-                return False
-
-        except socket.error:
-            print ("Rover down")
-            sys.exit()
-
-def start_sockets():
-    try:
-        ClientSocket.bind((host, client_port))
-    except socket.error as e:
-        print(str(e))
-
-    print('Client Socket is listening..')
-    ClientSocket.listen(5)
-
-    try:
-        RoverSocket.bind((host, rover_port))
-    except socket.error as e:
-        print(str(e))
-
-    print('Rover Socket is listening..')
-    RoverSocket.listen(5)
-
-def client_session(client_connection):
-    client_connection.send(str.encode('Server is working:'))
-    global id
+def control_loop():
     while True:
-        data = client_connection.recv(2048)
-        data_str = data.decode('utf-8')
-        # print(data_str)
-        if not data:
-            break
-        else:
-            if line_valid(data_str): #if command is valid
-                commands.append(Command_class(id, data_str))
-                id += 1
-                enc_message = crypto.encrypt(str.encode(data_str))
-                client_connection.sendall(enc_message)
-            else:
-                enc_message = crypto.encrypt(str.encode("DATA INVALID : " + data_str))
-                client_connection.sendall(enc_message)
-    client_connection.close()
+        print("Waiting for commands...")
+        command = ClientSocket.recv(1024)
+        print(command.decode('utf-8'))
+        print("waiting 2 seconds")
+        time.sleep(2)
+        ClientSocket.send(command)
+        print("Response sent!")
 
 
-def handle_clients():
-    global ThreadCount
-    while True:
-        Client, client_address = ClientSocket.accept()
-        print('Connected to: ' + client_address[0] + ':' + str(client_address[1]))
-        start_new_thread(client_session, (Client, ))
-        ThreadCount += 1
-        print('Thread Number: ' + str(ThreadCount))
 
-def handle_rover():
-    while True:
-        Rover, rover_address = RoverSocket.accept()
-        print('Rover connected from: ' + rover_address[0] + ':' + str(rover_address[1]))
-        start_new_thread(send_commands, (Rover, ))
-
-
-def send_commands(rover_connection):
-    while True:
-        id_list = []
-        if len(commands)!= 0:
-            for command in commands:
-                id_list.append(command.id)
-            for command in commands:
-                if command.id == min(id_list):
-                    print("Running command with id: " + str(command.id))
-                    tries = 0
-                    # command.execute(connection)
-                    while command.execute(rover_connection) != True:
-                        tries += 1
-                        if tries == 5:
-                            print("Transfer unsuccessfull: " + str(command))
-                    commands.remove(command)
 
 if __name__ == '__main__':
-    start_sockets()
-    start_new_thread(handle_clients, ())
-    handle_rover()
-
-
-    ClientSocket.close()
-    RoverSocket.close()
+    print("Starting db upload thread.")
+    start_new_thread(upload_loop, ())
+    print("Connecting to socket.")
+    try:
+        ClientSocket.connect((socket_host, socket_port))
+    except socket.error as e:
+        print(str(e))
+    print("Starting control thread.")
+    control_loop()
