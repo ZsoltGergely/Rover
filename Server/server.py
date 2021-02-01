@@ -4,6 +4,8 @@ from _thread import *
 import time
 import json
 import sys
+from cryptography.fernet import Fernet
+
 
 cfg = open("server_config.json", "r")
 tmpconfig = cfg.read()
@@ -14,11 +16,39 @@ id = 0
 
 client_port = config["client_port"]
 rover_port = config["rover_port"]
+key = config["key"]
+
 host = '0.0.0.0'
 rover_host = '127.0.0.1'
 ThreadCount = 0
 ClientSocket = socket.socket()
 RoverSocket = socket.socket()
+crypto = Fernet(key)
+
+Valid_commands =[
+"Forward()",
+"Back()",
+"Left()",
+"Right()",
+"Arm_up()",
+"Arm_down()",
+"Arm_Forward()",
+"Arm_Back()",
+"Arm_Left()",
+"Arm_Right()",
+"Camera_Left()",
+"Camera_Right()"
+]
+
+def line_valid(command):
+    print(command)
+    split = command.split("(")
+    if split[0]+"()" in Valid_commands:
+        try:
+            int(split[1][:-1])
+            return True
+        except ValueError:
+            return False
 
 class Command_class:
     def __init__(self, id, command):
@@ -68,12 +98,14 @@ def client_session(client_connection):
         if not data:
             break
         else:
-            if 1==1: #if command is valid
+            if line_valid(data_str): #if command is valid
                 commands.append(Command_class(id, data_str))
                 id += 1
-                client_connection.sendall(str.encode(data_str))
+                enc_message = crypto.encrypt(str.encode(data_str))
+                client_connection.sendall(enc_message)
             else:
-                client_connection.sendall("DATA INVALID : " + str.encode(data_str))
+                enc_message = crypto.encrypt(str.encode("DATA INVALID : " + data_str))
+                client_connection.sendall(enc_message)
     client_connection.close()
 
 
@@ -114,7 +146,5 @@ if __name__ == '__main__':
     start_sockets()
     start_new_thread(handle_clients, ())
     handle_rover()
-
-
     ClientSocket.close()
     RoverSocket.close()

@@ -4,6 +4,7 @@ import json
 import socket
 import time
 from _thread import *
+from cryptography.fernet import Fernet
 
 color_white = (255,255,255)
 color_light = (170,170,170)
@@ -14,6 +15,7 @@ COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
 res = (1024,720)
 commands = ""
+command_output_height = 20
 
 cfg = open("client_config.json", "r")
 tmpconfig = cfg.read()
@@ -22,6 +24,8 @@ config = json.loads(tmpconfig)
 
 host = config["server"]
 port = config["port"]
+key = config["key"]
+
 
 Client = socket.socket()
 pygame.init()
@@ -30,6 +34,7 @@ width = screen.get_width()
 height = screen.get_height()
 smallfont = pygame.font.SysFont('Corbel',32)
 tinyfont = pygame.font.SysFont('Corbel',12)
+crypto = Fernet(key)
 
 
 class Button_class:
@@ -59,9 +64,10 @@ class Text_class:
 
 class InputBox:
 
-    def __init__(self, x, y, w, h, text=''):
+    def __init__(self, x, y, w, h, function, text=''):
         self.rect = pygame.Rect(x, y, w, h)
         self.color = COLOR_INACTIVE
+        self.function = function
         self.text = text
         self.txt_surface = smallfont.render(text, True, self.color)
         self.active = False
@@ -79,7 +85,7 @@ class InputBox:
         if event.type == pygame.KEYDOWN:
             if self.active:
                 if event.key == pygame.K_RETURN:
-                    print(self.text)
+                    eval(self.function + "(" + str(self.text) + ")")
                     global commands
                     commands +=  self.text + ";"
                     self.text = ""
@@ -107,21 +113,24 @@ class InputBox:
 
 Commands_in_file = []
 
-Valid_commands =[
+Rover_commands =[
 "Forward()",
 "Back()",
 "Left()",
-"Right()",
+"Right()"
+]
+Arm_commands = [
 "Arm_up()",
 "Arm_down()",
 "Arm_Forward()",
 "Arm_Back()",
 "Arm_Left()",
-"Arm_Right()",
+"Arm_Right()"
+]
+Camera_commands = [
 "Camera_Left()",
 "Camera_Right()"
 ]
-
 
 Buttons = [
 Button_class(650, 670, 65, 40, "Quit", "Close_window"),
@@ -141,38 +150,85 @@ Button_class(850, 670, 120, 40, "Read File", "Read_from_file")
 ]
 
 
-Input_boxes = [
 
-# InputBox(400, 100, 140, 32)
+Input_boxes = [
+    
+
+InputBox(160, 360, 20, 32, "Rover_move_text_func"),
+InputBox(590, 360, 20, 32, "Arm_move_text_func"),
+InputBox(160, 580, 20, 32, "Cam_deg_text_func")
+
+
 ]
+
+Rover_move = 100
+Rover_move_text = Text_class(160, 400, 24, str(Rover_move), color_white)
+
+Arm_move = 10
+Arm_move_text = Text_class(590, 400, 24, str(Arm_move), color_white)
+
+Cam_deg = 15
+Cam_deg_text = Text_class(160, 620, 24, str(Cam_deg), color_white)
 
 
 Texts = [
 Text_class(170, 50, 36, "Rover Controls", color_white),
 Text_class(520, 50, 36, "Arm Controls", color_white),
-Text_class(170, 430, 36, "Camera Controls", color_white)
+Text_class(170, 430, 36, "Camera Controls", color_white),
+
 ]
+
+
+def Arm_move_text_func(value):
+    global Arm_move
+    global Arm_move_text
+    Arm_move = int(value)
+    Arm_move_text = Text_class(590, 400, 24, str(Arm_move), color_white)
+
+    
+def Rover_move_text_func(value):
+    global Rover_move
+    global Rover_move_text
+    Rover_move = int(value)
+    Rover_move_text = Text_class(160, 400, 24, str(Rover_move), color_white)
+
+def Cam_deg_text_func(value):
+    global Cam_deg
+    global Cam_deg_text
+    Cam_deg = int(value)
+    Cam_deg_text = Text_class(160, 620, 24, str(Cam_deg), color_white)
+    
 
 def Close_window():
     print("Closing Client")
     pygame.quit()
 
+def line_valid(command):
+    split = command.split("(")
+    if split[0]+"()" in Rover_commands or split[0]+"()" in Arm_commands or split[0]+"()" in Camera_commands:
+        try:
+            int(split[1][:-1])
+            return True
+        except ValueError:
+            return False
+
 def Check_commands():
     global Commands_in_file
+    global command_output_height
     Commands_in_file = []
     input_file = open("commands.txt", "r")
     check = True
-    y = 20
+    command_output_height = 20
     for line in input_file:
 
-        if line.rstrip() not in Valid_commands:
-            print("not okay")
-            Commands_in_file.append(Text_class(820, y, 16, line.rstrip() + "  <----", color_white))
+        if not line_valid(line.rstrip()):
+            Commands_in_file.append(Text_class(820, command_output_height, 16, line.rstrip() + "  <----", color_white))
             check = False
+            
         else:
-            Commands_in_file.append(Text_class(820, y, 16, line.rstrip(), color_white))
-            print("okay")
-        y += 18
+            Commands_in_file.append(Text_class(820, command_output_height, 16, line.rstrip(), color_white))
+
+        command_output_height += 18
     input_file.close()
     return check
 
@@ -181,12 +237,17 @@ def Read_from_file():
     if Check_commands() == True:
         input_file = open("commands.txt", "r")
         for line in input_file:
-            print("yay")
             data = line.rstrip()
             Client.send(str.encode(data))
-            print("Sent from file: " + data)
+            print("Sent from file: " + data + "\n" + "Waiting for response...")
+            res = Client.recv(2048)
+            decrypted_message = crypto.decrypt(res)
+            print(decrypted_message)
             time.sleep(0.1)
+        Commands_in_file.append(Text_class(820, command_output_height, 18,"Data transfer successfull", color_white))
         input_file.close()
+    else:
+        Commands_in_file.append(Text_class(820, command_output_height, 18,"Error in file!",color_white))
 
 def main_loop():
     while True:
@@ -200,8 +261,30 @@ def main_loop():
             if ev.type == pygame.MOUSEBUTTONDOWN:
                 for Button in Buttons:
                     if Button.loc_x <= mouse[0] <= Button.loc_x + Button.size_x and Button.loc_y <= mouse[1] <= Button.loc_y + Button.size_y:
-                        if Button.function + "()" in Valid_commands:
-                            Client.send(str.encode(Button.function + "()"))
+                        if Button.function + "()" in Rover_commands:
+                            data = Button.function + "(" + str(Rover_move) + ")"
+                            Client.send(str.encode(data))
+                            print("Sent from file: " + data + "\n" + "Waiting for response...")
+
+                            res = Client.recv(2048)
+                            decrypted_message = crypto.decrypt(res)
+                            print(decrypted_message)
+                            
+                        elif Button.function + "()" in Arm_commands:
+                            data = Button.function + "(" + str(Rover_move) + ")"
+                            Client.send(str.encode(data))
+                            print("Sent from file: " + data + "\n" + "Waiting for response...")
+                            res = Client.recv(2048)
+                            decrypted_message = crypto.decrypt(res)
+                            print(decrypted_message)
+                            
+                        elif Button.function + "()" in Camera_commands:
+                            data = Button.function + "(" + str(Rover_move) + ")"
+                            Client.send(str.encode(data))
+                            print("Sent from file: " + data + "\n" + "Waiting for response...")
+                            res = Client.recv(2048)
+                            decrypted_message = crypto.decrypt(res)
+                            print(decrypted_message)
                         else:
                             eval(Button.function + "()")
             for Box in Input_boxes:
@@ -225,6 +308,10 @@ def main_loop():
             Text.draw(screen, color_white)
         for Command_in_file in Commands_in_file:
             Command_in_file.draw(screen, color_white)
+            
+        Arm_move_text.draw(screen, color_white)
+        Rover_move_text.draw(screen, color_white)
+        Cam_deg_text.draw(screen, color_white)
 
         pygame.display.update()
 
