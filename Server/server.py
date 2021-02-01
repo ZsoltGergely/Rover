@@ -4,6 +4,8 @@ from _thread import *
 import time
 import json
 import sys
+from cryptography.fernet import Fernet
+
 
 cfg = open("server_config.json", "r")
 tmpconfig = cfg.read()
@@ -14,11 +16,14 @@ id = 0
 
 client_port = config["client_port"]
 rover_port = config["rover_port"]
+key = config["key"]
+
 host = '0.0.0.0'
 rover_host = '127.0.0.1'
 ThreadCount = 0
 ClientSocket = socket.socket()
 RoverSocket = socket.socket()
+crypto = Fernet(key)
 
 Valid_commands =[
 "Forward()",
@@ -36,6 +41,7 @@ Valid_commands =[
 ]
 
 def line_valid(command):
+    command = command[-2:-1]
     split = command.split("(")
     if split[0]+"()" in Valid_commands:
         try:
@@ -95,9 +101,11 @@ def client_session(client_connection):
             if line_valid(data_str): #if command is valid
                 commands.append(Command_class(id, data_str))
                 id += 1
-                client_connection.sendall(str.encode(data_str))
+                enc_message = crypto.encrypt(str.encode(data_str))
+                client_connection.sendall(enc_message)
             else:
-                client_connection.sendall("DATA INVALID : " + str.encode(data_str))
+                enc_message = crypto.encrypt(str.encode("DATA INVALID : " + data_str))
+                client_connection.sendall(enc_message)
     client_connection.close()
 
 
