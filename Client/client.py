@@ -14,6 +14,7 @@ COLOR_INACTIVE = pygame.Color('lightskyblue3')
 COLOR_ACTIVE = pygame.Color('dodgerblue2')
 res = (1024,720)
 commands = ""
+command_output_height = 20
 
 cfg = open("client_config.json", "r")
 tmpconfig = cfg.read()
@@ -157,22 +158,32 @@ def Close_window():
     print("Closing Client")
     pygame.quit()
 
+def line_valid(command):
+    split = command.split("(")
+    if split[0]+"()" in Valid_commands:
+        try:
+            int(split[1][:-1])
+            return True
+        except ValueError:
+            return False
+
 def Check_commands():
     global Commands_in_file
+    global command_output_height
     Commands_in_file = []
     input_file = open("commands.txt", "r")
     check = True
-    y = 20
+    command_output_height = 20
     for line in input_file:
 
-        if line.rstrip() not in Valid_commands:
-            print("not okay")
-            Commands_in_file.append(Text_class(820, y, 16, line.rstrip() + "  <----", color_white))
+        if not line_valid(line.rstrip()):
+            Commands_in_file.append(Text_class(820, command_output_height, 16, line.rstrip() + "  <----", color_white))
             check = False
+            
         else:
-            Commands_in_file.append(Text_class(820, y, 16, line.rstrip(), color_white))
-            print("okay")
-        y += 18
+            Commands_in_file.append(Text_class(820, command_output_height, 16, line.rstrip(), color_white))
+
+        command_output_height += 18
     input_file.close()
     return check
 
@@ -181,13 +192,16 @@ def Read_from_file():
     if Check_commands() == True:
         input_file = open("commands.txt", "r")
         for line in input_file:
-            print("yay")
             data = line.rstrip()
             Client.send(str.encode(data))
-            print("Sent from file: " + data)
+            print("Sent from file: " + data + "\n" + "Waiting for response...")
+            res = Client.recv(2048)
+            print(res.decode('utf-8'))
             time.sleep(0.1)
+        Commands_in_file.append(Text_class(820, command_output_height, 18,"Data transfer successfull", color_white))
         input_file.close()
-
+    else:
+        Commands_in_file.append(Text_class(820, command_output_height, 18,"Error in file!",color_white))
 def main_loop():
     while True:
 
