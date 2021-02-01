@@ -20,6 +20,30 @@ ThreadCount = 0
 ClientSocket = socket.socket()
 RoverSocket = socket.socket()
 
+Valid_commands =[
+"Forward()",
+"Back()",
+"Left()",
+"Right()",
+"Arm_up()",
+"Arm_down()",
+"Arm_Forward()",
+"Arm_Back()",
+"Arm_Left()",
+"Arm_Right()",
+"Camera_Left()",
+"Camera_Right()"
+]
+
+def line_valid(command):
+    split = command.split("(")
+    if split[0]+"()" in Valid_commands:
+        try:
+            int(split[1][:-1])
+            return True
+        except ValueError:
+            return False
+
 class Command_class:
     def __init__(self, id, command):
         self.id = id
@@ -68,7 +92,7 @@ def client_session(client_connection):
         if not data:
             break
         else:
-            if 1==1: #if command is valid
+            if line_valid(data_str): #if command is valid
                 commands.append(Command_class(id, data_str))
                 id += 1
                 client_connection.sendall(str.encode(data_str))
