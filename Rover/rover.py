@@ -1,10 +1,10 @@
 import mysql.connector
-from flask import Flask, request, jsonify
 import json
 import traceback
 from _thread import *
 import time
 import socket
+from cryptography.fernet import Fernet
 
 
 
@@ -26,6 +26,7 @@ db_pass = config["db_pass"]
 db = config["db"]
 socket_host = config["server"]
 socket_port = config["port"]
+key = config["key"]
 
 mydb = mysql.connector.connect(
     host=db_host,
@@ -37,6 +38,7 @@ mydb = mysql.connector.connect(
 
 mycursor = mydb.cursor(buffered=True)
 ClientSocket = socket.socket()
+crypto = Fernet(key)
 
 seed(1)
 
@@ -107,11 +109,15 @@ def control_loop():
     while True:
         print("Waiting for commands...")
         command = ClientSocket.recv(1024)
-        print(command.decode('utf-8'))
-        print("waiting 2 seconds")
-        time.sleep(2)
+        decrypted_message = crypto.decrypt(command)
+        print(str(decrypted_message))
         ClientSocket.send(command)
-        print("Response sent!")
+        print("Confirmation sent!")
+
+        #Command execution goes
+        time.sleep(5)
+        enc_message = crypto.encrypt(str.encode(decrypted_message.decode()+";DN"))
+        ClientSocket.send(enc_message)
 
 
 

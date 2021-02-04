@@ -19,7 +19,7 @@ rover_port = config["rover_port"]
 key = config["key"]
 
 host = '0.0.0.0'
-rover_host = '127.0.0.1'
+rover_host = '0.0.0.0'
 ThreadCount = 0
 ClientSocket = socket.socket()
 RoverSocket = socket.socket()
@@ -57,14 +57,23 @@ class Command_class:
 
     def execute(self, rover_connection):
         try:
-            rover_connection.sendall(str.encode(self.command))
+            enc_message = crypto.encrypt(str.encode(self.command))
+            rover_connection.sendall(enc_message)
             print("Sent: " + self.command)
             data = rover_connection.recv(2048)
-            data_str = data.decode('utf-8')
-            print ("Received: " + data_str)
-            if data_str == self.command:
-                return True
+            decrypted_message = crypto.decrypt(data)
+            print ("Confirmation received: " + str(decrypted_message))
+            if decrypted_message.decode() == self.command:
+                confirmation = rover_connection.recv(2048)
+                decrypted_conf = crypto.decrypt(confirmation)
+                print ("Command execution received: " + decrypted_conf.decode())
+                if decrypted_conf.decode() == self.command + ";DN":
+                    return True
+                else:
+                    print("execution not matching")
+                    return False
             else:
+                print("decrypted_message not matching")
                 return False
 
         except socket.error:
@@ -98,14 +107,30 @@ def client_session(client_connection):
         if not data:
             break
         else:
-            if line_valid(data_str): #if command is valid
-                commands.append(Command_class(id, data_str))
-                id += 1
-                enc_message = crypto.encrypt(str.encode(data_str))
-                client_connection.sendall(enc_message)
+            if data_str[:3] == "FL;":
+                lines = data_str.split(";")
+                lines.remove("FL")
+                lines.remove("")
+                for line in lines:
+                    if line_valid(line): #if command is valid
+                        commands.append(Command_class(id, line))
+                        id += 1
+                        enc_message = crypto.encrypt(str.encode(line))
+                        client_connection.sendall(enc_message)
+                    else:
+                        enc_message = crypto.encrypt(str.encode("DATA INVALID : " + line))
+                        client_connection.sendall(enc_message)
+
+                print(lines)
             else:
-                enc_message = crypto.encrypt(str.encode("DATA INVALID : " + data_str))
-                client_connection.sendall(enc_message)
+                if line_valid(data_str): #if command is valid
+                    commands.append(Command_class(id, data_str))
+                    id += 1
+                    enc_message = crypto.encrypt(str.encode(data_str))
+                    client_connection.sendall(enc_message)
+                else:
+                    enc_message = crypto.encrypt(str.encode("DATA INVALID : " + data_str))
+                    client_connection.sendall(enc_message)
     client_connection.close()
 
 

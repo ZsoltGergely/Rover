@@ -152,7 +152,7 @@ Button_class(850, 670, 120, 40, "Read File", "Read_from_file")
 
 
 Input_boxes = [
-    
+
 
 InputBox(160, 360, 20, 32, "Rover_move_text_func"),
 InputBox(590, 360, 20, 32, "Arm_move_text_func"),
@@ -185,7 +185,7 @@ def Arm_move_text_func(value):
     Arm_move = int(value)
     Arm_move_text = Text_class(590, 400, 24, str(Arm_move), color_white)
 
-    
+
 def Rover_move_text_func(value):
     global Rover_move
     global Rover_move_text
@@ -197,7 +197,7 @@ def Cam_deg_text_func(value):
     global Cam_deg_text
     Cam_deg = int(value)
     Cam_deg_text = Text_class(160, 620, 24, str(Cam_deg), color_white)
-    
+
 
 def Close_window():
     print("Closing Client")
@@ -224,9 +224,10 @@ def Check_commands():
         if not line_valid(line.rstrip()):
             Commands_in_file.append(Text_class(820, command_output_height, 16, line.rstrip() + "  <----", color_white))
             check = False
-            
+
         else:
             Commands_in_file.append(Text_class(820, command_output_height, 16, line.rstrip(), color_white))
+
 
         command_output_height += 18
     input_file.close()
@@ -236,14 +237,18 @@ def Read_from_file():
 
     if Check_commands() == True:
         input_file = open("commands.txt", "r")
+        data = "FL;"
         for line in input_file:
-            data = line.rstrip()
-            Client.send(str.encode(data))
-            print("Sent from file: " + data + "\n" + "Waiting for response...")
-            res = Client.recv(2048)
-            decrypted_message = crypto.decrypt(res)
+            data += line.rstrip()+";"
+        Client.send(str.encode(data))
+        print("Sent from file: " + data + "\n" + "Waiting for response...")
+        res = Client.recv(2048)
+        decrypted_message = crypto.decrypt(res)
+        if decrypted_message != data:
             print(decrypted_message)
-            time.sleep(0.1)
+            print(data)
+            print("File transfer not successfull")
+        time.sleep(0.1)
         Commands_in_file.append(Text_class(820, command_output_height, 18,"Data transfer successfull", color_white))
         input_file.close()
     else:
@@ -269,7 +274,7 @@ def main_loop():
                             res = Client.recv(2048)
                             decrypted_message = crypto.decrypt(res)
                             print(decrypted_message)
-                            
+
                         elif Button.function + "()" in Arm_commands:
                             data = Button.function + "(" + str(Rover_move) + ")"
                             Client.send(str.encode(data))
@@ -277,7 +282,7 @@ def main_loop():
                             res = Client.recv(2048)
                             decrypted_message = crypto.decrypt(res)
                             print(decrypted_message)
-                            
+
                         elif Button.function + "()" in Camera_commands:
                             data = Button.function + "(" + str(Rover_move) + ")"
                             Client.send(str.encode(data))
@@ -308,7 +313,7 @@ def main_loop():
             Text.draw(screen, color_white)
         for Command_in_file in Commands_in_file:
             Command_in_file.draw(screen, color_white)
-            
+
         Arm_move_text.draw(screen, color_white)
         Rover_move_text.draw(screen, color_white)
         Cam_deg_text.draw(screen, color_white)
