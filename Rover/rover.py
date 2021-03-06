@@ -37,7 +37,6 @@ mydb = mysql.connector.connect(
 
 
 mycursor = mydb.cursor(buffered=True)
-ClientSocket = socket.socket()
 crypto = Fernet(key)
 
 seed(1)
@@ -105,30 +104,52 @@ def upload_loop():
         time.sleep(1)
         # print("------------------------")
 
-def control_loop():
+def control_loop(Socket):
     while True:
-        print("Waiting for commands...")
-        command = ClientSocket.recv(1024)
-        decrypted_message = crypto.decrypt(command)
-        print(str(decrypted_message))
-        ClientSocket.send(command)
-        print("Confirmation sent!")
+        try:
+            print("Waiting for commands...")
+            command = Socket.recv(1024)
+            decrypted_message = crypto.decrypt(command)
+            print(decrypted_message)
+            if decrypted_message.decode() == "Ping":
 
-        #Command execution goes
-        time.sleep(5)
-        enc_message = crypto.encrypt(str.encode(decrypted_message.decode()+";DN"))
-        ClientSocket.send(enc_message)
+                enc_message = crypto.encrypt(str.encode("Pong"))
+                Socket.send(enc_message)
+            else:
+                Socket.send(command)
+                print("Confirmation sent!")
 
+                #Command execution goes
+                time.sleep(5)
+                enc_message = crypto.encrypt(str.encode(decrypted_message.decode()+";DN"))
+                Socket.send(enc_message)
+        except socket.timeout as e:
+            print(str(e))
+            socket_reconnect()
+
+
+
+def socket_reconnect():
+    print("Reconnecting to socket.")
+    try:
+        ClientSocket.connect((socket_host, socket_port))
+        print("Starting control thread.")
+        return ClientSocket
+    except socket.error as e:
+        print(str(e))
+        return None
 
 
 
 if __name__ == '__main__':
+    ClientSocket = socket.socket()
     print("Starting db upload thread.")
     start_new_thread(upload_loop, ())
     print("Connecting to socket.")
     try:
         ClientSocket.connect((socket_host, socket_port))
+        ClientSocket.settimeout(5)
     except socket.error as e:
         print(str(e))
     print("Starting control thread.")
-    control_loop()
+    control_loop(ClientSocket)
