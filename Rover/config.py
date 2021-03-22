@@ -3,6 +3,8 @@
 # DC motrok pin
 # motor_name_M = [IN1, IN2]
 
+#   FIGYELEM =====> BCM numbering
+
 E_JOBB_M = [26, 19]
 E_BAL_M = [13, 11]
 

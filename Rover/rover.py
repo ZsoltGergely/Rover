@@ -6,6 +6,10 @@ import time
 import socket
 from cryptography.fernet import Fernet
 import serial
+# random
+from random import seed
+from random import randint
+# random
 
 class Error(Exception):
     pass
@@ -56,56 +60,67 @@ crypto = Fernet(key)
 
 
 
+def read_data(serial_connection):
+    line = ser.readline()
+    if line[:1] == "*" and line[-2:-1]:
+        line.replace("*", "")
+        elements = line.split(";")
+        for index, value in enumerate(elements):
+            if not (value > data_validation[index][0] and value < data_validation[index][1]):
+                raise DataInvalid(value, index)
+
+        presssure = elements[0]
+        temperature = elements[1]
+        humidity = elements[2]
+        gyro_x = elements[3]
+        gyro_y = elements[4]
+        gyro_z = elements[5]
+        uv_index = elements[6] 
+        ir_light = elements[7]
+        visible_light = elements[8]
+        eco2 = elements[9]
+        tvoc = elements[10]
+
+    return presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc
+
+
 def upload_loop():
     while True:
         print("Trying to open serial port...")
-        serial_connection = serial.Serial('/dev/ttyACM0')
+        serial_connection = serial.Serial('/dev/ttyUSB0')
         if serial_connection.is_open:
             print("Opened port " + serial_connection.name + " successfully")
             break
-    print(serial_connection)
 
     while True:
-        print("Yes")
         try:
-            line = str(serial_connection.readline())
-            line.replace("*", "")
-            print(line)
-            print(line)
-            elements = line[3:-5].split(";")
-            print(elements)
-
-            pressure = float(elements[2])
-            temperature = float(elements[0])
-            humidity = float(elements[1])
-            gyro_x = float(elements[10])
-            gyro_y = float(elements[11])
-            gyro_z = float(elements[12])
-            uv_index = float(elements[5])
-            ir_light = float(elements[4])
-            visible_light = float(elements[3])
-            eco2 = float(elements[7])
-            tvoc = float(elements[6])
-            rawh2 = float(elements[8])
-            rawethanol = float(elements[9])
-            acc_x = float(elements[13])
-            acc_y = float(elements[14])
-            acc_z = float(elements[15])
-            mag_x = float(elements[16])
-            mag_y = float(elements[17])
-            mag_z = float(elements[18])
-
-
-            sql_query = "INSERT INTO `sensor_data`(`pressure`, `temperature`, `humidity`, `gyro_x`, `gyro_y`, `gyro_z`, `uv_index`, `ir_light`, `visible_light`, `eco2`, `tvoc` , `rawh2`, `rawethanol`, `acc_x`, `acc_y`, `acc_z`, `mag_x`, `mag_y`, `mag_z`) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}');"
-            mycursor.execute(sql_query.format(pressure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc, rawh2, rawethanol, acc_x, acc_y, acc_z, mag_x, mag_y, mag_z))
-            mydb.commit()
-            print(sql_query.format(pressure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
-
-            time.sleep(1)
+            presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc = read_data(serial_connection)
         except DataInvalid as e:
 
             print("Data with index " + str(e.index) + " is not in range: " + str(data_validation[e.index][0]) + " < " + str(e.value) + " < " + str(data_validation[e.index][1]))
             continue
+
+        try:
+            sql_query = "INSERT INTO `sensor_data`(`presssure`, `temperature`, `humidity`, `gyro_x`, `gyro_y`, `gyro_z`, `uv_index`, `ir_light`, `visible_light`, `eco2`, `tvoc`) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}');"
+            mycursor.execute(sql_query.format(presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
+            mydb.commit()
+            # print(sql_query.format(presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
+        except Exception:
+            print("Error connecting to DB")
+            print("------------------------")
+            print(traceback.format_exc())
+            print("------------------------")
+            print("Reconnecting...")
+            mydb.reconnect()
+            print("------------------------")
+            sql_query = "INSERT INTO `sensor_data`(`presssure`, `temperature`, `humidity`, `gyro_x`, `gyro_y`, `gyro_z`, `uv_index`, `ir_light`, `visible_light`, `eco2`, `tvoc`) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}');"
+            mycursor.execute(sql_query.format(presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
+            mydb.commit()
+            # print(sql_query.format(presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
+
+        time.sleep(1)
+        # print("------------------------")
+    serial_connection.__del__()
 
 def control_loop(Socket):
     while True:
@@ -123,9 +138,9 @@ def control_loop(Socket):
                 print("Confirmation sent!")
 
                 #Command execution goes
-                time.sleep(2)
-                # enc_message = crypto.encrypt(str.encode(decrypted_message.decode()+";DN"))
-                # Socket.send(enc_message)
+                time.sleep(5)
+                enc_message = crypto.encrypt(str.encode(decrypted_message.decode()+";DN"))
+                Socket.send(enc_message)
         except socket.timeout as e:
             print(str(e))
             socket_reconnect()

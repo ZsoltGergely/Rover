@@ -1,4 +1,4 @@
-pip import serial
+import serial
 from sys import version_info
 
 PY2 = version_info[0] == 2  # Running Python 2.x?
@@ -29,7 +29,7 @@ class __Controller:
     # assumes.  If two or more controllers are connected to different serial
     # ports, or you are using a Windows OS, you can provide the tty port.  For
     # example, '/dev/ttyACM2' or for Windows, something like 'COM3'.
-    def __init__(self, ttyStr='/dev/ttyAMA0', device=0x0c):
+    def init(self, ttyStr='/dev/ttyACM0', device=0x0c):
         # Open the command port
         self.usb = serial.Serial(ttyStr)
         # Command lead-in and device number are sent for each Pololu serial command.
@@ -176,24 +176,14 @@ class __Controller:
 
 
 servos=__Controller()
+def init():
+    # global servos
+    servos.init()
 
-# class Servo:
-#     def __init__(self, chan, servoType: dict, interval: list, default=0):
-#         self.default=default
-#         self.chan=chan
-#         self.min = interval[0]
-#         self.max = interval[1]
-#         global servos
-#         servos.setRange(chan, servoType["min"], servoType["max"])
-#         servos.setTarget(chan, default)
-#     def write(self, angle):
-#         global servos
-#         servos.setTarget(self.chan, utils.translate(angle, self.min, self.max, servos.Mins[self.chan], servos.Maxs[self.chan]))
-#
-#     def read(self):
-#         global servos
-#         return utils.translate(servos.getPosition(self.chan), servos.Mins[self.chan], servos.Maxs[self.chan], self.min,
-#                                self.max)
+
+def close():
+    global servos
+    servos.close()
 
 
 class Servo:

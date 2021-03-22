@@ -1,11 +1,11 @@
-import wiringpi
+import RPi.GPIO as GPIO
 
 # Motor speeds for this library are specified as numbers
 # between -MAX_SPEED and MAX_SPEED, inclusive.
 _max_speed = 73  # 19.2 MHz / 2 / 480 = 20 kHz
 MAX_SPEED = _max_speed
 
-rpi_pwm = []  # 12, 13, 18, 19]
+PWM_FREQ = 100
 
 """
 def io_init():
@@ -27,50 +27,50 @@ def io_init():
     io_initialized = True
 """
 
-wiringpi.wiringPiSetupGpio()
-
 
 class Motor:
-    def __init__(self, IN1, IN2):
+    def __init__(self, IN1, IN2, max=MAX_SPEED):
         self.IN1 = IN1
         self.IN2 = IN2
 
-        wiringpi.pinMode(IN1, wiringpi.GPIO.OUTPUT)
-        wiringpi.pinMode(IN2, wiringpi.GPIO.OUTPUT)
+        GPIO.setup(IN1, GPIO.OUT)
+        GPIO.setup(IN2, GPIO.OUT)
 
-        wiringpi.softPwmCreate(IN1, 0, MAX_SPEED)
-        wiringpi.softPwmCreate(IN2, 0, MAX_SPEED)
+        self.pwm1 = GPIO.PWM(IN1, 100)
+        self.pwm2 = GPIO.PWM(IN2, 100)
+        self.pwm1.start(0)
+        self.pwm2.start(0)
 
-    def reverse(self, speed=MAX_SPEED):
-        wiringpi.softPwmWrite(self.IN1, wiringpi.GPIO.LOW)
-        wiringpi.softPwmWrite(self.IN2, min(MAX_SPEED, abs(speed)))
+        self.MAX_SPEED = max
 
-    def forward(self, speed=MAX_SPEED):
-        wiringpi.softPwmWrite(self.IN2, wiringpi.GPIO.LOW)
-        wiringpi.softPwmWrite(self.IN1, min(MAX_SPEED, abs(speed)))
+    def __reverse(self, speed):
+        duty = min(self.MAX_SPEED, speed) * 100 / self.MAX_SPEED
+        # print(duty)
+        self.pwm1.ChangeDutyCycle(0)
+        self.pwm2.ChangeDutyCycle(duty)
+
+    def __forward(self, speed):
+        duty = min(self.MAX_SPEED, speed) * 100 / self.MAX_SPEED
+        # print(duty)
+        self.pwm1.ChangeDutyCycle(duty)
+        self.pwm2.ChangeDutyCycle(0)
 
     def setSpeed(self, speed):
         if speed < 0:
-            self.reverse(-speed)
+            self.__reverse(-speed)
         else:
-            self.forward(speed)
+            self.__forward(speed)
 
     def stop(self):
         self.setSpeed(0)
 
-    def brake(self):
-        wiringpi.softPwmWrite(self.IN2, MAX_SPEED)
-        wiringpi.softPwmWrite(self.IN1, MAX_SPEED)
-
-
 
 class DRV8833:
     def __init__(self, A1, A2, B1, B2):
-        self.motorA=Motor(A1, A2)
-        self.motorB=Motor(B1, B2)
+        self.motorA = Motor(A1, A2)
+        self.motorB = Motor(B1, B2)
 
-
-    def stop(self, A = True, B = True):
+    def stop(self, A=True, B=True):
 
         if A:
             self.motorA.stop()
@@ -82,3 +82,13 @@ class DRV8833:
             self.motorA.setSpeed(speedA)
         if speedB is not None:
             self.motorB.setSpeed(speedB)
+
+
+def init():
+    GPIO.setmode(GPIO.BCM)
+
+
+def close():
+    GPIO.cleanup()
+
+

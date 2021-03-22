@@ -92,7 +92,7 @@ def upload_loop():
 
 
         # print("------------------------")
-    serial_connection.close()
+    serial_connection.__del__()
 
 
 
