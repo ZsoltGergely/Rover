@@ -113,9 +113,12 @@ class InputBox:
 
 Commands_in_file = []
 
-Rover_commands =[
+Rover_move_commands =[
 "Forward()",
-"Back()",
+"Back()"
+
+]
+Rover_turn_commands = [
 "Left()",
 "Right()"
 ]
@@ -128,8 +131,8 @@ Arm_commands = [
 "Arm_Right()"
 ]
 Camera_commands = [
-"Camera_Left()",
-"Camera_Right()"
+"Camera_Up()",
+"Camera_Down()"
 ]
 
 Buttons = [
@@ -144,8 +147,8 @@ Button_class(660, 120, 70, 70, "Forward", "Arm_Forward"),
 Button_class(660, 280, 70, 70, "Back", "Arm_Back"),
 Button_class(580, 200, 70, 70, "Left", "Arm_Left"),
 Button_class(740, 200, 70, 70, "Right", "Arm_Right"),
-Button_class(150, 500, 70, 70, "Left", "Camera_Left"),
-Button_class(310, 500, 70, 70, "Right", "Camera_Right"),
+Button_class(150, 550, 70, 70, "Left", "Camera_Up"),
+Button_class(310, 550, 70, 70, "Right", "Camera_Down"),
 Button_class(850, 670, 120, 40, "Read File", "Read_from_file")
 ]
 
@@ -155,26 +158,32 @@ Input_boxes = [
 
 
 InputBox(160, 360, 20, 32, "Rover_move_text_func"),
+InputBox(160, 420, 20, 32, "Rover_turn_text_func"),
 InputBox(590, 360, 20, 32, "Arm_move_text_func"),
-InputBox(160, 580, 20, 32, "Cam_deg_text_func")
+InputBox(160, 630, 20, 32, "Cam_deg_text_func")
 
 
 ]
 
-Rover_move = 100
-Rover_move_text = Text_class(160, 400, 24, str(Rover_move), color_white)
+Rover_move = 1
+Rover_move_text = Text_class(160, 390, 24, str(Rover_move), color_white)
+
+Rover_turn = 1
+Rover_turn_text = Text_class(160, 450, 24, str(Rover_move), color_white)
 
 Arm_move = 10
 Arm_move_text = Text_class(590, 400, 24, str(Arm_move), color_white)
 
 Cam_deg = 15
-Cam_deg_text = Text_class(160, 620, 24, str(Cam_deg), color_white)
+Cam_deg_text = Text_class(160, 670, 24, str(Cam_deg), color_white)
 
 
 Texts = [
 Text_class(170, 50, 36, "Rover Controls", color_white),
 Text_class(520, 50, 36, "Arm Controls", color_white),
-Text_class(170, 430, 36, "Camera Controls", color_white),
+Text_class(170, 480, 36, "Camera Controls", color_white),
+Text_class(20, 370, 24, "Move amount", color_white),
+Text_class(20, 430, 24, "Turn amount", color_white)
 
 ]
 
@@ -191,6 +200,12 @@ def Rover_move_text_func(value):
     global Rover_move_text
     Rover_move = int(value)
     Rover_move_text = Text_class(160, 400, 24, str(Rover_move), color_white)
+
+def Rover_turn_text_func(value):
+    global Rover_turn
+    global Rover_turn_text
+    Rover_turn = int(value)
+    Rover_turn_text = Text_class(160, 450, 24, str(Rover_turn), color_white)
 
 def Cam_deg_text_func(value):
     global Cam_deg
@@ -266,7 +281,7 @@ def main_loop():
             if ev.type == pygame.MOUSEBUTTONDOWN:
                 for Button in Buttons:
                     if Button.loc_x <= mouse[0] <= Button.loc_x + Button.size_x and Button.loc_y <= mouse[1] <= Button.loc_y + Button.size_y:
-                        if Button.function + "()" in Rover_commands:
+                        if Button.function + "()" in Rover_move_commands:
                             data = Button.function + "(" + str(Rover_move) + ")"
                             Client.send(str.encode(data))
                             print("Sent from file: " + data + "\n" + "Waiting for response...")
@@ -274,7 +289,14 @@ def main_loop():
                             res = Client.recv(2048)
                             decrypted_message = crypto.decrypt(res)
                             print(decrypted_message)
+                        if Button.function + "()" in Rover_turn_commands:
+                            data = Button.function + "(" + str(Rover_turn) + ")"
+                            Client.send(str.encode(data))
+                            print("Sent from file: " + data + "\n" + "Waiting for response...")
 
+                            res = Client.recv(2048)
+                            decrypted_message = crypto.decrypt(res)
+                            print(decrypted_message)
                         elif Button.function + "()" in Arm_commands:
                             data = Button.function + "(" + str(Rover_move) + ")"
                             Client.send(str.encode(data))
@@ -284,7 +306,7 @@ def main_loop():
                             print(decrypted_message)
 
                         elif Button.function + "()" in Camera_commands:
-                            data = Button.function + "(" + str(Rover_move) + ")"
+                            data = Button.function + "(" + str(Cam_deg) + ")"
                             Client.send(str.encode(data))
                             print("Sent from file: " + data + "\n" + "Waiting for response...")
                             res = Client.recv(2048)
@@ -317,7 +339,7 @@ def main_loop():
         Arm_move_text.draw(screen, color_white)
         Rover_move_text.draw(screen, color_white)
         Cam_deg_text.draw(screen, color_white)
-
+        Rover_turn_text.draw(screen, color_white)
         pygame.display.update()
 
 if __name__ == '__main__':

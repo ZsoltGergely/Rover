@@ -58,6 +58,21 @@ crypto = Fernet(key)
 def Forward(time):
     mvc.moveAtAngle(50, 0, time)
 
+def Back(time):
+    mvc.moveAtAngle(-50, 0, time)
+
+def Right(time):
+    mvc.turn(20, 1, time)
+
+def Left(time):
+    mvc.turn(20, 0, time)
+
+def Camera_Up(value):
+    mvc.camServo.write(value)
+
+def Camera_Up(value):
+    mvc.camServo.write(-value)
+
 def control_loop(Socket):
     while True:
         try:
