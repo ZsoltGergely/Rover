@@ -1,7 +1,7 @@
 import mysql.connector
 import json
 import serial
-
+import time
 
 class Error(Exception):
     pass
@@ -61,25 +61,37 @@ def upload_loop():
         print("Yes")
         try:
             line = str(serial_connection.readline())
-            print(line)
             line.replace("*", "")
             print(line)
-            elements = line1.split(";")
+            print(line)
+            elements = line[3:-5].split(";")
             print(elements)
 
-            presssure = int(elements[0])
-            temperature = int(elements[1])
-            humidity = int(elements[2])
-            gyro_x = int(elements[3])
-            gyro_y = int(elements[4])
-            gyro_z = int(elements[5])
-            uv_index = int(elements[6])
-            ir_light = int(elements[7])
-            visible_light = int(elements[8])
-            eco2 = int(elements[9])
-            tvoc = int(elements[10])
-            sql_query = "INSERT INTO `sensor_data`(`pressure`, `temperature`, `humidity`, `gyro_x`, `gyro_y`, `gyro_z`, `uv_index`, `ir_light`, `visible_light`, `eco2`, `tvoc`) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}');"
-            mycursor.execute(sql_query.format(pressure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
+            pressure = float(elements[2])
+            temperature = float(elements[0])
+            humidity = float(elements[1])
+            gyro_x = float(elements[10])
+            gyro_y = float(elements[11])
+            gyro_z = float(elements[12])
+            uv_index = float(elements[5])
+            ir_light = float(elements[4])
+            visible_light = float(elements[3])
+            eco2 = float(elements[7])
+            tvoc = float(elements[6])
+            rawh2 = float(elements[8])
+            rawethanol = float(elements[9])
+            acc_x = float(elements[13])
+            acc_y = float(elements[14])
+            acc_z = float(elements[15])
+            mag_x = float(elements[16])
+            mag_y = float(elements[17])
+            mag_z = float(elements[18])
+
+
+
+
+            sql_query = "INSERT INTO `sensor_data`(`pressure`, `temperature`, `humidity`, `gyro_x`, `gyro_y`, `gyro_z`, `ir_light`, `visible_light`, `eco2`, `tvoc`, `rawh2`, `rawethanol`, `acc_x`, `acc_y`, `acc_z`, `mag_x`, `mag_y`, `mag_z`) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}');"
+            mycursor.execute(sql_query.format(pressure, temperature, humidity, gyro_x, gyro_y, gyro_z, ir_light, visible_light, eco2, tvoc, rawh2, rawethanol, acc_x, acc_y, acc_z, mag_x, mag_y, mag_z))
             mydb.commit()
             print(sql_query.format(pressure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
 

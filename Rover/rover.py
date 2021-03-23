@@ -5,11 +5,7 @@ from _thread import *
 import time
 import socket
 from cryptography.fernet import Fernet
-import serial
-# random
-from random import seed
-from random import randint
-# random
+import movement_control as mvc
 
 class Error(Exception):
     pass
@@ -59,68 +55,8 @@ mycursor = mydb.cursor(buffered=True)
 crypto = Fernet(key)
 
 
-
-def read_data(serial_connection):
-    line = ser.readline()
-    if line[:1] == "*" and line[-2:-1]:
-        line.replace("*", "")
-        elements = line.split(";")
-        for index, value in enumerate(elements):
-            if not (value > data_validation[index][0] and value < data_validation[index][1]):
-                raise DataInvalid(value, index)
-
-        presssure = elements[0]
-        temperature = elements[1]
-        humidity = elements[2]
-        gyro_x = elements[3]
-        gyro_y = elements[4]
-        gyro_z = elements[5]
-        uv_index = elements[6] 
-        ir_light = elements[7]
-        visible_light = elements[8]
-        eco2 = elements[9]
-        tvoc = elements[10]
-
-    return presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc
-
-
-def upload_loop():
-    while True:
-        print("Trying to open serial port...")
-        serial_connection = serial.Serial('/dev/ttyUSB0')
-        if serial_connection.is_open:
-            print("Opened port " + serial_connection.name + " successfully")
-            break
-
-    while True:
-        try:
-            presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc = read_data(serial_connection)
-        except DataInvalid as e:
-
-            print("Data with index " + str(e.index) + " is not in range: " + str(data_validation[e.index][0]) + " < " + str(e.value) + " < " + str(data_validation[e.index][1]))
-            continue
-
-        try:
-            sql_query = "INSERT INTO `sensor_data`(`presssure`, `temperature`, `humidity`, `gyro_x`, `gyro_y`, `gyro_z`, `uv_index`, `ir_light`, `visible_light`, `eco2`, `tvoc`) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}');"
-            mycursor.execute(sql_query.format(presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
-            mydb.commit()
-            # print(sql_query.format(presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
-        except Exception:
-            print("Error connecting to DB")
-            print("------------------------")
-            print(traceback.format_exc())
-            print("------------------------")
-            print("Reconnecting...")
-            mydb.reconnect()
-            print("------------------------")
-            sql_query = "INSERT INTO `sensor_data`(`presssure`, `temperature`, `humidity`, `gyro_x`, `gyro_y`, `gyro_z`, `uv_index`, `ir_light`, `visible_light`, `eco2`, `tvoc`) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}');"
-            mycursor.execute(sql_query.format(presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
-            mydb.commit()
-            # print(sql_query.format(presssure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
-
-        time.sleep(1)
-        # print("------------------------")
-    serial_connection.__del__()
+def Forward(time):
+    mvc.moveAtAngle(50, 0, time)
 
 def control_loop(Socket):
     while True:
@@ -136,9 +72,8 @@ def control_loop(Socket):
             else:
                 Socket.send(command)
                 print("Confirmation sent!")
-
-                #Command execution goes
-                time.sleep(5)
+                print(decrypted_message)
+                eval(decrypted_message)
                 enc_message = crypto.encrypt(str.encode(decrypted_message.decode()+";DN"))
                 Socket.send(enc_message)
         except socket.timeout as e:
@@ -160,9 +95,8 @@ def socket_reconnect():
 
 
 if __name__ == '__main__':
+    mvc.init()
     ClientSocket = socket.socket()
-    print("Starting db upload thread.")
-    start_new_thread(upload_loop, ())
     print("Connecting to socket.")
     try:
         ClientSocket.connect((socket_host, socket_port))

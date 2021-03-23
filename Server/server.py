@@ -61,13 +61,14 @@ class Command_class:
             rover_connection.sendall(enc_message)
             print("Sent: " + self.command)
             data = rover_connection.recv(2048)
+            print(crypto.decrypt(data))
             decrypted_message = crypto.decrypt(data)
             print ("Confirmation received: " + str(decrypted_message))
             if decrypted_message.decode() == self.command:
                 confirmation = rover_connection.recv(2048)
                 decrypted_conf = crypto.decrypt(confirmation)
                 print ("Command execution received: " + decrypted_conf.decode())
-                if decrypted_conf.decode() == self.command + ";DN":
+                if decrypted_conf.decode() == self.command+ ";DN" :
                     return True
                 else:
                     print("execution not matching")
@@ -79,6 +80,16 @@ class Command_class:
         except socket.error:
             print ("Rover down")
             sys.exit()
+
+def Ping(Socket):
+    while True:
+        time.sleep(3)
+        print("Pinging rover...")
+        enc_message = crypto.encrypt(str.encode("Ping"))
+        Socket.send(enc_message)
+        answer = Socket.recv(1024)
+        decrypted_message = crypto.decrypt(answer)
+        print(decrypted_message.decode())
 
 def start_sockets():
     try:
@@ -148,6 +159,7 @@ def handle_rover():
         Rover, rover_address = RoverSocket.accept()
         print('Rover connected from: ' + rover_address[0] + ':' + str(rover_address[1]))
         start_new_thread(send_commands, (Rover, ))
+        # start_new_thread(Ping, (Rover, ))
 
 
 def send_commands(rover_connection):
@@ -166,6 +178,7 @@ def send_commands(rover_connection):
                         if tries == 5:
                             print("Transfer unsuccessfull: " + str(command))
                     commands.remove(command)
+
 
 if __name__ == '__main__':
     start_sockets()

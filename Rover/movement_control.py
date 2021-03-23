@@ -31,33 +31,33 @@ def init():
     fw_motors = drv8833.DRV8833(config.E_BAL_M[0], config.E_BAL_M[1], config.E_JOBB_M[0], config.E_JOBB_M[1])
     bw_motors = drv8833.DRV8833(config.H_BAL_M[0], config.H_BAL_M[1], config.H_JOBB_M[0], config.H_JOBB_M[1])
 
-    balElso = maestro.Servo(0, -90, 90, config.PWM_MG90S["min"], config.PWM_MG90S["max"], 0, accel=10)
-    jobbElso = maestro.Servo(1, -90, 90, config.PWM_MG90S["min"], config.PWM_MG90S["max"], 0, accel=10)
-    balHatso = maestro.Servo(2, -90, 90, config.PWM_MG90S["min"], config.PWM_MG90S["max"], 0, accel=10)
-    jobbHatso = maestro.Servo(3, -90, 90, config.PWM_MG90S["min"], config.PWM_MG90S["max"], 0, accel=10)
+    balElso = maestro.Servo(7, -90, 90, config.PWM_MG90S["min"], config.PWM_MG90S["max"], 0, accel=10)
+    jobbElso = maestro.Servo(8, -90, 90, config.PWM_MG90S["min"], config.PWM_MG90S["max"], 0, accel=10)
+    balHatso = maestro.Servo(9, -90, 90, config.PWM_MG90S["min"], config.PWM_MG90S["max"], 0, accel=10)
+    jobbHatso = maestro.Servo(10, -90, 90, config.PWM_MG90S["min"], config.PWM_MG90S["max"], 0, accel=10)
 
     # Arm control
 
-    servo_1 = maestro.Servo(7, min_pulse=config.PWM_MM0090["min"], max_pulse=config.PWM_MM0090["max"], default=0,
+    servo_1 = maestro.Servo(0, min_pulse=config.PWM_MM0090["min"], max_pulse=config.PWM_MM0090["max"], default=0,
                             accel=60)
-    servo_2 = maestro.Servo(8, min_pulse=config.PWM_MM0090["min"], max_pulse=config.PWM_MM0090["max"], default=-90,
+    servo_2 = maestro.Servo(1, min_pulse=config.PWM_MM0090["min"], max_pulse=config.PWM_MM0090["max"], default=-90,
                             accel=60)
-    servo_3 = maestro.Servo(9, min_pulse=config.PWM_MM0090["min"], max_pulse=config.PWM_MM0090["max"], default=-30,
+    servo_3 = maestro.Servo(2, min_pulse=config.PWM_MM0090["min"], max_pulse=config.PWM_MM0090["max"], default=-30,
                             accel=60)
-    servo_4 = maestro.Servo(10, min_pulse=config.PWM_MG90S["min"], max_pulse=config.PWM_MG90S["max"], default=90,
+    servo_4 = maestro.Servo(3, min_pulse=config.PWM_MG90S["min"], max_pulse=config.PWM_MG90S["max"], default=90,
                             accel=60)
-    servo_gripper = maestro.Servo(11, min_pulse=config.PWM_MG90S["min"], max_pulse=config.PWM_MG90S["max"], default=60,
+    servo_gripper = maestro.Servo(4, min_pulse=config.PWM_MG90S["min"], max_pulse=config.PWM_MG90S["max"], default=60,
                                   accel=60)
 
     # Camera control
 
-    camServo = maestro.Servo(4, -90, 90, config.PWM_SG90["min"], config.PWM_SG90["max"])
+    camServo = maestro.Servo(5, -90, 90, config.PWM_SG90["min"], config.PWM_SG90["max"])
 
     global controlThread, timeBased
 
     controlThread = threading.Thread(target=thread4motorControl, daemon=True)
     controlThread.start()
-    
+
     timeBased=True
 
 
@@ -118,10 +118,10 @@ def moveAroundCirc(speed, angle=None, timer=None):
     setAszt(angle, angle, -angle, -angle, speed, speed, speed, speed, timer if timer is not None else 60)
 
 
-def turn(speed, direction: bool):
+def turn(speed, direction: bool, timer=None):
     angle = CIR_ANGLE
     speed = speed if direction else -speed
-    setAszt(angle, -angle, -angle, angle, speed, -speed, speed, -speed)
+    setAszt(angle, -angle, -angle, angle, speed, -speed, speed, -speed, timer if timer is not None else 60)
 
 
 def stop():
