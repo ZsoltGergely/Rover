@@ -11,6 +11,7 @@ import threading
 #     servo_1, servo_2, servo_3, servo_4, servo_gripper, camServo
 
 speeds = [0, 0, 0, 0]
+_speeds = [0, 0, 0, 0]
 targets = [0, 0, 0, 0]
 end_time = time()
 timeBased = False
@@ -18,6 +19,8 @@ distanceBased = False
 
 CIR_ANGLE = 50
 
+
+servoNumbering = [7, 8, 9,10]
 
 def init():
     drv8833.init()
@@ -31,10 +34,10 @@ def init():
     fw_motors = drv8833.DRV8833(config.E_BAL_M[0], config.E_BAL_M[1], config.E_JOBB_M[0], config.E_JOBB_M[1])
     bw_motors = drv8833.DRV8833(config.H_BAL_M[0], config.H_BAL_M[1], config.H_JOBB_M[0], config.H_JOBB_M[1])
 
-    balElso = maestro.Servo(7, -90, 90, config.PWM_MG90S["min"], config.PWM_MG90S["max"], 0, accel=10)
-    jobbElso = maestro.Servo(8, -90, 90, config.PWM_MG90S["min"], config.PWM_MG90S["max"], 0, accel=10)
-    balHatso = maestro.Servo(9, -90, 90, config.PWM_MG90S["min"], config.PWM_MG90S["max"], 0, accel=10)
-    jobbHatso = maestro.Servo(10, -90, 90, config.PWM_MG90S["min"], config.PWM_MG90S["max"], 0, accel=10)
+    balElso = maestro.Servo(servoNumbering[0], -90, 90, config.PWM_MG90S["min"], config.PWM_MG90S["max"], 0, accel=10)
+    jobbElso = maestro.Servo(servoNumbering[1], -90, 90, config.PWM_MG90S["min"], config.PWM_MG90S["max"], 0, accel=10)
+    balHatso = maestro.Servo(servoNumbering[2], -90, 90, config.PWM_MG90S["min"], config.PWM_MG90S["max"], 0, accel=10)
+    jobbHatso = maestro.Servo(servoNumbering[3], -90, 90, config.PWM_MG90S["min"], config.PWM_MG90S["max"], 0, accel=10)
 
     # Arm control
 
@@ -89,8 +92,11 @@ def close():
 
 
 def thread4motorControl():
+    global _speeds
     while True:
-        _speeds = speeds
+        if not maestro.servos.isMoving(servoNumbering[0]) and not maestro.servos.isMoving(servoNumbering[1]) and\
+                not maestro.servos.isMoving(servoNumbering[2]) and not maestro.servos.isMoving(servoNumbering[3]):
+            _speeds = speeds
         if timeBased and end_time >= time():
             fw_motors.setSpeeds(speedA=_speeds[0], speedB=_speeds[1])
             bw_motors.setSpeeds(speedA=_speeds[2], speedB=_speeds[3])
