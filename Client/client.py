@@ -147,8 +147,8 @@ Button_class(660, 120, 70, 70, "Forward", "Arm_Forward"),
 Button_class(660, 280, 70, 70, "Back", "Arm_Back"),
 Button_class(580, 200, 70, 70, "Left", "Arm_Left"),
 Button_class(740, 200, 70, 70, "Right", "Arm_Right"),
-Button_class(150, 550, 70, 70, "Left", "Camera_Up"),
-Button_class(310, 550, 70, 70, "Right", "Camera_Down"),
+Button_class(150, 550, 70, 70, "Up", "Camera_Up"),
+Button_class(310, 550, 70, 70, "Down", "Camera_Down"),
 Button_class(850, 670, 120, 40, "Read File", "Read_from_file")
 ]
 
@@ -281,18 +281,19 @@ def main_loop():
             if ev.type == pygame.MOUSEBUTTONDOWN:
                 for Button in Buttons:
                     if Button.loc_x <= mouse[0] <= Button.loc_x + Button.size_x and Button.loc_y <= mouse[1] <= Button.loc_y + Button.size_y:
+                        print(Button.function + "()")
                         if Button.function + "()" in Rover_move_commands:
                             data = Button.function + "(" + str(Rover_move) + ")"
                             Client.send(str.encode(data))
-                            print("Sent from file: " + data + "\n" + "Waiting for response...")
+                            print("Sent from ui: " + data + "\n" + "Waiting for response...")
 
                             res = Client.recv(2048)
                             decrypted_message = crypto.decrypt(res)
                             print(decrypted_message)
-                        if Button.function + "()" in Rover_turn_commands:
+                        elif Button.function + "()" in Rover_turn_commands:
                             data = Button.function + "(" + str(Rover_turn) + ")"
                             Client.send(str.encode(data))
-                            print("Sent from file: " + data + "\n" + "Waiting for response...")
+                            print("Sent from ui: " + data + "\n" + "Waiting for response...")
 
                             res = Client.recv(2048)
                             decrypted_message = crypto.decrypt(res)
@@ -300,7 +301,7 @@ def main_loop():
                         elif Button.function + "()" in Arm_commands:
                             data = Button.function + "(" + str(Rover_move) + ")"
                             Client.send(str.encode(data))
-                            print("Sent from file: " + data + "\n" + "Waiting for response...")
+                            print("Sent from ui: " + data + "\n" + "Waiting for response...")
                             res = Client.recv(2048)
                             decrypted_message = crypto.decrypt(res)
                             print(decrypted_message)
@@ -308,7 +309,7 @@ def main_loop():
                         elif Button.function + "()" in Camera_commands:
                             data = Button.function + "(" + str(Cam_deg) + ")"
                             Client.send(str.encode(data))
-                            print("Sent from file: " + data + "\n" + "Waiting for response...")
+                            print("Sent from ui: " + data + "\n" + "Waiting for response...")
                             res = Client.recv(2048)
                             decrypted_message = crypto.decrypt(res)
                             print(decrypted_message)

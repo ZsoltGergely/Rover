@@ -36,8 +36,8 @@ Valid_commands =[
 "Arm_Back()",
 "Arm_Left()",
 "Arm_Right()",
-"Camera_Left()",
-"Camera_Right()"
+"Camera_Up()",
+"Camera_Down()"
 ]
 
 def line_valid(command):
@@ -159,7 +159,7 @@ def handle_rover():
         Rover, rover_address = RoverSocket.accept()
         print('Rover connected from: ' + rover_address[0] + ':' + str(rover_address[1]))
         start_new_thread(send_commands, (Rover, ))
-        # start_new_thread(Ping, (Rover, ))
+        start_new_thread(Ping, (Rover, ))
 
 
 def send_commands(rover_connection):
