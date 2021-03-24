@@ -1,54 +1,45 @@
-
+<?php
+	session_start();
+?>
 <html>
 <head>
+	<meta charset='utf-8' />
 	 <link rel='stylesheet' href='CSS/graph.css'>
 	 <script>
-		function Line(str)
-		{
-			if(str=="Line On")
-			{
-				var update = {
-					mode:"markers"
-				};
-				Plotly.restyle("Div1", update);
-				Plotly.restyle("Div2", update);
-				Plotly.restyle("Div3", update);
-				Plotly.restyle("Div4", update);
 
-				document.getElementById("vonal").value="Line Off"
-			}
-			else if(str=="Line Off")
-			{
-				var update = {
-					mode:"lines+markers"
-				};
-				Plotly.restyle("Div1", update);
-				Plotly.restyle("Div2", update);
-				Plotly.restyle("Div3", update);
-				Plotly.restyle("Div4", update);
-
-				document.getElementById("vonal").value="Line On"
-			}
-		}
+	 	var timer = setInterval(myTimer, 1000);
+		function myTimer() {
+			var xmlhttp = new XMLHttpRequest();
+        	xmlhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                eval(this.responseText);
+            }
+			
+        	};
+			xmlhttp.open("GET", "JS/graph.php", true);
+        	xmlhttp.send();
+		}	
 	</script>
 </head>
 
 <body>
-
-
-	<div class = 'intro' id='Div1' ></div>
-	<div class = 'intro' id='Div2' ></div>
-	<div class = 'intro' id='Div3' ></div>
-	<div class = 'intro' id='Div4' ></div>
-
-
-	<input type='button' name='vonal' id='vonal' value='Line On' onclick='Line(this.value)' />
+	
+	<h1 style="text-align:center;"> Mikó </h1> 
+	<iframe width="848" height="480" src="https://www.youtube.com/embed/h1Htt--G0u4" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+	<div id='Div1' ></div>
+	<div id='Div2' ></div>
+	<div id='Div3' ></div>
+	<div id='Div4' ></div>
+	
+	
+	
+	
 
 	<script src='JS/plotly-latest.min.js'></script>
-	<?php
-	include_once('JS/graph.php');
-	?>
-
-
+	
+	
 </body>
 </html>
+<?php
+	session_destroy();
+?>
