@@ -10,6 +10,8 @@ import mysql.connector
 import json
 import serial
 import time
+from datetime import datetime
+
 
 class Error(Exception):
     pass
@@ -85,16 +87,13 @@ def upload_loop():
             print("Opened port " + serial_connection.name + " successfully")
             break
     print(serial_connection)
-
+    f = open("dataoutput.txt", "a")
     while True:
-        print("Yes")
+
         try:
             line = str(serial_connection.readline())
             line.replace("*", "")
-            print(line)
-            print(line)
             elements = line[3:-5].split(";")
-            print(elements)
 
             pressure = float(elements[2])
             temperature = float(elements[0])
@@ -117,13 +116,15 @@ def upload_loop():
             mag_z = float(elements[18])
 
 
+            now = datetime.now()
+            current_time = now.strftime("%d/%m/%Y %H:%M:%S")
 
-
-            sql_query = "INSERT INTO `sensor_data`(`pressure`, `temperature`, `humidity`, `gyro_x`, `gyro_y`, `gyro_z`, `uv_index`, `ir_light`, `visible_light`, `eco2`, `tvoc`, `rawh2`, `rawethanol`, `acc_x`, `acc_y`, `acc_z`, `mag_x`, `mag_y`, `mag_z`) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}');"
-            mycursor.execute(sql_query.format(pressure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc, rawh2, rawethanol, acc_x, acc_y, acc_z, mag_x, mag_y, mag_z))
+            f.write("({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})\n".format(current_time, pressure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc, rawh2, rawethanol, acc_x, acc_y, acc_z, mag_x, mag_y, mag_z, 0))
+            sql_query = "INSERT INTO `sensor_data`(`pressure`, `temperature`, `humidity`, `gyro_x`, `gyro_y`, `gyro_z`,`uv_index`, `ir_light`, `visible_light`, `eco2`, `tvoc`, `rawh2`, `rawethanol`, `acc_x`, `acc_y`, `acc_z`, `mag_x`, `mag_y`, `mag_z`, `longitude`) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}');"
+            mycursor.execute(sql_query.format(pressure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc, rawh2, rawethanol, acc_x, acc_y, acc_z, mag_x, mag_y, mag_z, 0))
             mydb.commit()
-            print(sql_query.format(pressure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
-
+            # print(sql_query.format(pressure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
+            print("Data upload")
             time.sleep(1)
         except DataInvalid as e:
 
@@ -134,7 +135,7 @@ def upload_loop():
 
         # print("------------------------")
     serial_connection.__del__()
-
+    f.close()
 
 
 def control_loop(Socket):
@@ -174,6 +175,8 @@ def socket_reconnect():
 
 
 if __name__ == '__main__':
+    print("Starting db upload thread.")
+    start_new_thread(upload_loop, ( ))
     mvc.init()
     ClientSocket = socket.socket()
     print("Connecting to socket.")
@@ -187,5 +190,3 @@ if __name__ == '__main__':
         control_loop(ClientSocket)
     finally:
         mvc.close()
-    print("Starting db upload thread.")
-    start_new_thread(upload_loop, ( ))
