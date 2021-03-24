@@ -3,6 +3,7 @@ import maestro
 import config
 import math
 from time import time, sleep
+import kar as kar
 import threading
 
 """==============INIT=============="""
@@ -16,9 +17,13 @@ targets = [0, 0, 0, 0]
 end_time = time()
 timeBased = False
 distanceBased = False
+arm=kar.Kar()
+pont=kar.Pont()
 
-CIR_ANGLE = 50
+WIDTH = 25
+LENGTH = 30
 
+CIR_ANGLE = math.degrees(math.atan(LENGTH/WIDTH))
 
 servoNumbering = [7, 8, 9,10]
 
@@ -31,8 +36,8 @@ def init():
 
     # Motor and steering control
 
-    fw_motors = drv8833.DRV8833(config.E_BAL_M[0], config.E_BAL_M[1], config.E_JOBB_M[0], config.E_JOBB_M[1])
-    bw_motors = drv8833.DRV8833(config.H_BAL_M[0], config.H_BAL_M[1], config.H_JOBB_M[0], config.H_JOBB_M[1])
+    fw_motors = drv8833.DRV8833(config.E_BAL_M[0], config.E_BAL_M[1], config.E_JOBB_M[0], config.E_JOBB_M[1], 110, 110)
+    bw_motors = drv8833.DRV8833(config.H_BAL_M[0], config.H_BAL_M[1], config.H_JOBB_M[0], config.H_JOBB_M[1], 33, 33)
 
     balElso = maestro.Servo(servoNumbering[0], -90, 90, config.PWM_MG90S["min"], config.PWM_MG90S["max"], 0, accel=10)
     jobbElso = maestro.Servo(servoNumbering[1], -90, 90, config.PWM_MG90S["min"], config.PWM_MG90S["max"], 0, accel=10)
@@ -94,9 +99,10 @@ def close():
 def thread4motorControl():
     global _speeds
     while True:
-        if not maestro.servos.isMoving(servoNumbering[0]) and not maestro.servos.isMoving(servoNumbering[1]) and\
-                not maestro.servos.isMoving(servoNumbering[2]) and not maestro.servos.isMoving(servoNumbering[3]):
-            _speeds = speeds
+        if maestro.servos.isMoving(servoNumbering[0]) or maestro.servos.isMoving(servoNumbering[1]) or\
+                maestro.servos.isMoving(servoNumbering[2]) or maestro.servos.isMoving(servoNumbering[3]):
+            continue
+        _speeds = speeds
         if timeBased and end_time >= time():
             fw_motors.setSpeeds(speedA=_speeds[0], speedB=_speeds[1])
             bw_motors.setSpeeds(speedA=_speeds[2], speedB=_speeds[3])
@@ -107,21 +113,45 @@ def thread4motorControl():
         sleep(0.1)
 
 
+#
+# /-----/
+#    |
+#    |
+# |-----|
+#
+
 def moveAtAngleFW(speed, angle=None, timer=None):
+    # angleB = math.degrees(math.atan(1/(1/math.tan(angle)-WIDTH/LENGTH)))*math.copysign(1, angle)
+    # angleA = math.degrees(math.atan(1/(1/math.tan(angle)-WIDTH/LENGTH)))
     setAszt(angle, angle, 0, 0, speed, speed, speed, speed, timer if timer is not None else 60)
 
 
-def moveAtAngleBW(speed, angle=None, timer=None):
-    setAszt(0, 0, angle, angle, speed, speed, speed, speed, timer if timer is not None else 60)
+# def moveAtAngleBW(speed, angle=None, timer=None):
+#     setAszt(0, 0, angle, angle, speed, speed, speed, speed, timer if timer is not None else 60)
 
 
 def moveAtAngle(speed, angle=None, timer=None):
     setAszt(angle, angle, 0, 0, speed, speed, speed, speed, timer if timer is not None else 60)
     # setAszt(0, 0, angle, angle, speed, speed, speed, speed)
 
+#
+# /-----/
+#    |
+#    |
+# \-----\
+#
 
 def moveAroundCirc(speed, angle=None, timer=None):
+
     setAszt(angle, angle, -angle, -angle, speed, speed, speed, speed, timer if timer is not None else 60)
+
+
+#
+# /-----\
+#    |
+#    |
+# \-----/
+#
 
 
 def turn(speed, direction: bool, timer=None):
@@ -136,8 +166,8 @@ def stop():
 
 """=======ARM CONTROL======"""
 
-
-def setArm(s1, s2, s3, s4, g):
+# Home pos 0 -90 -30 90 60
+def setArm(s1=0, s2=-90, s3=-30, s4=90, g=60):
     if s1 is not None:
         servo_1.write(s1)
     if s2 is not None:
@@ -151,66 +181,14 @@ def setArm(s1, s2, s3, s4, g):
         servo_gripper.write(g)
 
 
-class Pont:
-    def __init__(self):
-        self.x = None
-        self.y = None
-        self.z = None
-
-
-def fokba(a):
-    b = a * 180 / math.pi
-    return b
-
-
-class Kar:
-    def __init__(self):
-        self.a1 = None
-        self.a2 = None
-        self.a3 = None
-        self.a4 = None
-        self.l1 = 2
-        self.l2 = 2
-        self.l3 = 2
-        self.A = Pont()
-        self.B = Pont()
-
-    def set_szogek(self, szog, P):
-        if P.x == 0:
-            self.a1 = math.pi / 2
-        else:
-            self.a1 = math.atan(P.y / P.x)
-        self.B.z = P.z + math.sin(szog) * self.l3
-        self.B.x = P.x - math.cos(self.a1) * (math.cos(szog) * self.l3)
-        self.B.y = P.y - math.sin(self.a1) * (math.cos(szog) * self.l3)
-
-        try:
-            self.a3 = math.pi - math.acos(
-                (self.l1 * 2 + self.l2 * 2 - self.B.x * 2 - self.B.y * 2 - self.B.z ** 2) / (2 * self.l1 * self.l2))
-        except Exception:
-            print('Tul messze van')
-            return
-
-        self.a2 = math.asin(self.B.z / (math.sqrt(self.B.x * 2 + self.B.y * 2 + self.B.z ** 2))) + math.asin(
-            math.sin(self.a3) * self.l2 / (math.sqrt(self.B.x * 2 + self.B.y * 2 + self.B.z ** 2)))
-
-        self.A.z = math.sin(self.a2) * self.l1
-        self.A.x = math.cos(self.a1) * math.cos(self.a2) * self.l1
-        self.A.y = math.sin(self.a1) * math.cos(self.a2) * self.l1
-
-        d = math.sqrt((P.x - self.A.x) * 2 + (P.y - self.A.y) * 2 + (P.z - self.A.z) ** 2)
-
-        self.a4 = math.pi - math.acos((self.l3 * 2 + self.l2 * 2 - d ** 2) / (2 * self.l1 * self.l2))
-
-        self.a3 = -self.a3
-
-        Tmp = Pont()
-        Tmp.x = (self.A.x + P.x) / 2
-        Tmp.y = (self.A.y + P.y) / 2
-        Tmp.z = (self.A.z + P.z) / 2
-        if Tmp.z < self.B.z:
-            self.a4 = -self.a4
-        return self.a1, self.a2, self.a3, self.a4
-
+def moveArmToPos(x, y, z, gamma=90):
+    global pont
+    pont = kar.Pont(x, y, z)
+    szogek = arm.set_szogek(gamma, pont)
+    print(szogek)
+    if szogek is not None:
+        setArm(szogek[0], szogek[1], szogek[2], szogek[3])
+    else:
+        setArm()
 
 """"========CAMERA CONTROL POSITION======"""

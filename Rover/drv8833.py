@@ -2,7 +2,7 @@ import RPi.GPIO as GPIO
 
 # Motor speeds for this library are specified as numbers
 # between -MAX_SPEED and MAX_SPEED, inclusive.
-_max_speed = 73  # 19.2 MHz / 2 / 480 = 20 kHz
+_max_speed = 10  # 19.2 MHz / 2 / 480 = 20 kHz
 MAX_SPEED = _max_speed
 
 PWM_FREQ = 100
@@ -29,7 +29,7 @@ def io_init():
 
 
 class Motor:
-    def __init__(self, IN1, IN2, max=MAX_SPEED):
+    def __init__(self, IN1, IN2, maxRPM):
         self.IN1 = IN1
         self.IN2 = IN2
 
@@ -41,7 +41,7 @@ class Motor:
         self.pwm1.start(0)
         self.pwm2.start(0)
 
-        self.MAX_SPEED = max
+        self.MAX_SPEED = maxRPM
 
     def __reverse(self, speed):
         duty = min(self.MAX_SPEED, speed) * 100 / self.MAX_SPEED
@@ -66,9 +66,9 @@ class Motor:
 
 
 class DRV8833:
-    def __init__(self, A1, A2, B1, B2):
-        self.motorA = Motor(A1, A2)
-        self.motorB = Motor(B1, B2)
+    def __init__(self, A1, A2, B1, B2, maxA=MAX_SPEED, maxB=MAX_SPEED):
+        self.motorA = Motor(A1, A2, maxA)
+        self.motorB = Motor(B1, B2, maxB)
 
     def stop(self, A=True, B=True):
 

@@ -123,12 +123,17 @@ Rover_turn_commands = [
 "Right()"
 ]
 Arm_commands = [
-"Arm_up()",
-"Arm_down()",
-"Arm_Forward()",
-"Arm_Back()",
-"Arm_Left()",
-"Arm_Right()"
+"1_U()",
+"1_D()",
+"2_U()",
+"2_D()",
+"3_U()",
+"3_D()",
+"4_U()",
+"4_D()",
+"5_U()",
+"5_D()",
+
 ]
 Camera_commands = [
 "Camera_Up()",
@@ -141,18 +146,27 @@ Button_class(230, 120, 70, 70, "Forward", "Forward"),
 Button_class(230, 280, 70, 70, "Back", "Back"),
 Button_class(150, 200, 70, 70, "Left", "Left"),
 Button_class(310, 200, 70, 70, "Right", "Right"),
-Button_class(460, 120, 70, 70, "Up", "Arm_up"),
-Button_class(460, 280, 70, 70, "Down", "Arm_down"),
-Button_class(660, 120, 70, 70, "Forward", "Arm_Forward"),
-Button_class(660, 280, 70, 70, "Back", "Arm_Back"),
-Button_class(580, 200, 70, 70, "Left", "Arm_Left"),
-Button_class(740, 200, 70, 70, "Right", "Arm_Right"),
-Button_class(150, 550, 70, 70, "Left", "Camera_Up"),
-Button_class(310, 550, 70, 70, "Right", "Camera_Down"),
+Button_class(460, 120, 70, 70, "S1_U", "1_U"),
+Button_class(460, 280, 70, 70, "S1_D", "1_D"),
+Button_class(560, 120, 70, 70, "S2_U", "2_U"),
+Button_class(560, 280, 70, 70, "S2_D", "2_D"),
+Button_class(660, 120, 70, 70, "S3_U", "3_U"),
+Button_class(660, 280, 70, 70, "S3_D", "3_D"),
+Button_class(760, 120, 70, 70, "S4_U", "4_U"),
+Button_class(760, 280, 70, 70, "S4_D", "4_D"),
+Button_class(860, 120, 70, 70, "G_O", "5_U"),
+Button_class(860, 280, 70, 70, "G_C", "5_D"),
+Button_class(150, 550, 70, 70, "Up", "Camera_Up"),
+Button_class(310, 550, 70, 70, "Down", "Camera_Down"),
 Button_class(850, 670, 120, 40, "Read File", "Read_from_file")
 ]
 
-
+S1 = 0
+S2 = -90
+S3 = -30
+S4 = 90
+G = 60
+Cam = 15
 
 Input_boxes = [
 
@@ -281,34 +295,116 @@ def main_loop():
             if ev.type == pygame.MOUSEBUTTONDOWN:
                 for Button in Buttons:
                     if Button.loc_x <= mouse[0] <= Button.loc_x + Button.size_x and Button.loc_y <= mouse[1] <= Button.loc_y + Button.size_y:
+                        print(Button.function + "()")
                         if Button.function + "()" in Rover_move_commands:
                             data = Button.function + "(" + str(Rover_move) + ")"
                             Client.send(str.encode(data))
-                            print("Sent from file: " + data + "\n" + "Waiting for response...")
+                            print("Sent from ui: " + data + "\n" + "Waiting for response...")
 
                             res = Client.recv(2048)
                             decrypted_message = crypto.decrypt(res)
                             print(decrypted_message)
-                        if Button.function + "()" in Rover_turn_commands:
+                        elif Button.function + "()" in Rover_turn_commands:
                             data = Button.function + "(" + str(Rover_turn) + ")"
                             Client.send(str.encode(data))
-                            print("Sent from file: " + data + "\n" + "Waiting for response...")
+                            print("Sent from ui: " + data + "\n" + "Waiting for response...")
 
                             res = Client.recv(2048)
                             decrypted_message = crypto.decrypt(res)
                             print(decrypted_message)
                         elif Button.function + "()" in Arm_commands:
-                            data = Button.function + "(" + str(Rover_move) + ")"
+                            global S1
+                            global S2
+                            global S3
+                            global S4
+                            global G
+                            if Button.function[2:3] == "U":
+                                direction = 0
+                            else:
+                                direction = 1
+
+                            print("setArm({}, {}, {}, {}, {})".format(S1, S2, S3, S4, G))
+                            if Button.function[0:1] == "1":
+                                if not direction:
+                                    if not (S1 + Arm_move) > 90:
+                                        S1 += Arm_move
+                                    else:
+                                        print("Degree too high")
+                                else:
+                                    if not (S1 - Arm_move) < -90:
+
+                                        S1 -= Arm_move
+                                    else:
+                                        print("Degree too low")
+                            elif Button.function[0:1] == "2":
+                                if not direction:
+                                    if not (S2 + Arm_move) > 90:
+                                        S2 += Arm_move
+                                    else:
+                                        print("Degree too high")
+                                else:
+                                    if not (S2 - Arm_move) < -90:
+                                        S2 -= Arm_move
+                                    else:
+                                        print("Degree too low")
+                            elif Button.function[0:1] == "3":
+                                if not direction:
+                                    if not (S3 + Arm_move) > 90:
+                                        S3 += Arm_move
+                                    else:
+                                        print("Degree too high")
+                                else:
+                                    if not (S3 - Arm_move) < -90:
+                                        S3 -= Arm_move
+                                    else:
+                                        print("Degree too low")
+                            elif Button.function[0:1] == "4":
+                                if not direction:
+                                    if not (S4 + Arm_move) > 90:
+                                        S4 += Arm_move
+                                    else:
+                                        print("Degree too high")
+                                else:
+                                    if not (S4 - Arm_move) < -90:
+                                        S4 -= Arm_move
+                                    else:
+                                        print("Degree too low")
+
+                            elif Button.function[0:1] == "5":
+                                if direction:
+                                    if not (G - Arm_move) < -90:
+                                        G -= Arm_move
+                                    else:
+                                        print("Degree too low")
+                                else:
+                                    if not (G + Arm_move) > 90:
+                                        G += Arm_move
+                                    else:
+                                        print("Degree too high")
+                            print("setArm({}, {}, {}, {}, {})".format(S1, S2, S3, S4, G))
+                            data = "setArm({}, {}, {}, {}, {})".format(S1, S2, S3, S4, G)
+
                             Client.send(str.encode(data))
-                            print("Sent from file: " + data + "\n" + "Waiting for response...")
+                            print("Sent from ui: " + data + "\n" + "Waiting for response...")
                             res = Client.recv(2048)
                             decrypted_message = crypto.decrypt(res)
                             print(decrypted_message)
 
                         elif Button.function + "()" in Camera_commands:
-                            data = Button.function + "(" + str(Cam_deg) + ")"
+                            global Cam
+                            if Button.function + "()" != "Camera_Up()":
+                                if not (Cam + Cam_deg) > 90:
+                                    Cam += Cam_deg
+                                else:
+                                    print("Degree too high")
+                            else:
+                                if not (Cam - Cam_deg) < -90:
+                                    Cam -= Cam_deg
+                                else:
+                                    print("Degree too low")
+                            data = "setCam" + "(" + str(Cam) + ")"
                             Client.send(str.encode(data))
-                            print("Sent from file: " + data + "\n" + "Waiting for response...")
+                            print("Sent from ui: " + data + "\n" + "Waiting for response...")
                             res = Client.recv(2048)
                             decrypted_message = crypto.decrypt(res)
                             print(decrypted_message)
