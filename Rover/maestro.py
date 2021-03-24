@@ -29,7 +29,7 @@ class __Controller:
     # assumes.  If two or more controllers are connected to different serial
     # ports, or you are using a Windows OS, you can provide the tty port.  For
     # example, '/dev/ttyACM2' or for Windows, something like 'COM3'.
-    def init(self, ttyStr='/dev/ttyACM0', device=0x0c):
+    def init(self, ttyStr='/dev/ttyACM1', device=0x0c):
         # Open the command port
         self.usb = serial.Serial(ttyStr)
         # Command lead-in and device number are sent for each Pololu serial command.
@@ -209,8 +209,8 @@ class Servo:
 
     def write(self, value):
         global servos
-        if value < self.__min_value or value > self.__max_value:
-            raise ValueError("The value of the argument value is out of range.")
+        # if value < self.__min_value or value > self.__max_value:
+        #     raise ValueError("The value of the argument value is out of range.")
         write_value = (value - self.__min_value) / (self.__max_value - self.__min_value) * (
                     self.__max_pulse - self.__min_pulse) + self.__min_pulse
         servos.setTarget(self.__chan, int(write_value))
