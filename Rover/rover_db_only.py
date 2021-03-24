@@ -51,7 +51,7 @@ mycursor = mydb.cursor(buffered=True)
 def upload_loop():
     while True:
         print("Trying to open serial port...")
-        serial_connection = serial.Serial('/dev/ttyACM0')
+        serial_connection = serial.Serial('/dev/ttyACM2')
         if serial_connection.is_open:
             print("Opened port " + serial_connection.name + " successfully")
             break
