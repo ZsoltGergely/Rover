@@ -326,7 +326,7 @@ def main_loop():
                             print("setArm({}, {}, {}, {}, {})".format(S1, S2, S3, S4, G))
                             if Button.function[0:1] == "1":
                                 if not direction:
-                                    if not (S1 + Arm_move) > 90:
+                                    if (S1 + Arm_move) > 90:
                                         S1 += Arm_move
                                     else:
                                         print("Degree too high")
@@ -337,7 +337,7 @@ def main_loop():
                                     else:
                                         print("Degree too low")
                             elif Button.function[0:1] == "2":
-                                if not direction:
+                                if direction:
                                     if not (S2 + Arm_move) > 90:
                                         S2 += Arm_move
                                     else:

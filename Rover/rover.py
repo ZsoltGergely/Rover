@@ -6,6 +6,12 @@ import time
 import socket
 from cryptography.fernet import Fernet
 import movement_control as mvc
+import mysql.connector
+import json
+import serial
+import time
+from datetime import datetime
+
 
 class Error(Exception):
     pass
@@ -73,6 +79,65 @@ def setCam(value):
 def setArm(S1, S2, S3, S4, G):
     mvc.setArm(S1, S2, S3, S4, G)
 
+def upload_loop():
+    while True:
+        print("Trying to open serial port...")
+        serial_connection = serial.Serial('/dev/ttyACM0')
+        if serial_connection.is_open:
+            print("Opened port " + serial_connection.name + " successfully")
+            break
+    print(serial_connection)
+    f = open("dataoutput.txt", "a")
+    while True:
+
+        try:
+            line = str(serial_connection.readline())
+            line.replace("*", "")
+            elements = line[3:-5].split(";")
+
+            pressure = float(elements[2])
+            temperature = float(elements[0])
+            humidity = float(elements[1])
+            gyro_x = float(elements[10])
+            gyro_y = float(elements[11])
+            gyro_z = float(elements[12])
+            uv_index = float(elements[5])
+            ir_light = float(elements[4])
+            visible_light = float(elements[3])
+            eco2 = float(elements[7])
+            tvoc = float(elements[6])
+            rawh2 = float(elements[8])
+            rawethanol = float(elements[9])
+            acc_x = float(elements[13])
+            acc_y = float(elements[14])
+            acc_z = float(elements[15])
+            mag_x = float(elements[16])
+            mag_y = float(elements[17])
+            mag_z = float(elements[18])
+
+
+            now = datetime.now()
+            current_time = now.strftime("%d/%m/%Y %H:%M:%S")
+
+            f.write("({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})\n".format(current_time, pressure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc, rawh2, rawethanol, acc_x, acc_y, acc_z, mag_x, mag_y, mag_z, 0))
+            sql_query = "INSERT INTO `sensor_data`(`pressure`, `temperature`, `humidity`, `gyro_x`, `gyro_y`, `gyro_z`,`uv_index`, `ir_light`, `visible_light`, `eco2`, `tvoc`, `rawh2`, `rawethanol`, `acc_x`, `acc_y`, `acc_z`, `mag_x`, `mag_y`, `mag_z`, `longitude`) VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}');"
+            mycursor.execute(sql_query.format(pressure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc, rawh2, rawethanol, acc_x, acc_y, acc_z, mag_x, mag_y, mag_z, 0))
+            mydb.commit()
+            # print(sql_query.format(pressure, temperature, humidity, gyro_x, gyro_y, gyro_z, uv_index, ir_light, visible_light, eco2, tvoc))
+            print("Data upload")
+            time.sleep(1)
+        except DataInvalid as e:
+
+            print("Data with index " + str(e.index) + " is not in range: " + str(data_validation[e.index][0]) + " < " + str(e.value) + " < " + str(data_validation[e.index][1]))
+            continue
+
+
+
+        # print("------------------------")
+    serial_connection.__del__()
+    f.close()
+
+
 def control_loop(Socket):
     while True:
         try:
@@ -110,6 +175,8 @@ def socket_reconnect():
 
 
 if __name__ == '__main__':
+    print("Starting db upload thread.")
+    start_new_thread(upload_loop, ( ))
     mvc.init()
     ClientSocket = socket.socket()
     print("Connecting to socket.")
