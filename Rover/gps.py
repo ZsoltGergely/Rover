@@ -13,7 +13,7 @@ class date:
 		self.year = year
 
 
-class time:
+class timeClass:
 	def __init__(self):
 		self.hour = None
 		self.minute = None
@@ -29,11 +29,12 @@ class Gps(serial.Serial):
 
 	def __init__(self, port="/dev/ttyUSB2", baud=9600):
 		super().__init__(port, baud, timeout=5)
+		self.port = port
 		self.send("AT+CGPS=1,2")
 		self.lat = None
 		self.log = None
 		self.date = date()
-		self.UTC_time = time()
+		self.UTC_time = timeClass()
 		self.alt = None
 		self.speed = None
 		self.course = None
@@ -42,10 +43,22 @@ class Gps(serial.Serial):
 		self.close()
 
 	def send(self, cmd):
-		self.write(bytes(cmd + "\r", "ascii"))
+		try:
+			self.write(bytes(cmd + "\r", "ascii"))
+		except Exception:
+			try:
+				self.__init__(self.port)
+			finally:
+				return
 
 	def getline(self):
-		return self.readline().decode("ascii")
+		try:
+			return self.readline().decode("ascii")
+		except Exception:
+			try:
+				self.__init__(self.port)
+			finally:
+				return " "
 
 	def sendRecieve(self, cmd):
 		self.send(cmd)
