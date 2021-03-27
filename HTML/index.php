@@ -25,11 +25,15 @@
 <body>
 	
 	<h1 style="text-align:center;"> Mikó </h1> 
-	<iframe width="848" height="480" src="https://www.youtube.com/embed/h1Htt--G0u4" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+	<iframe src="http://89.46.239.103:8000/player.html" name="restreamer-player" width="800" height="450" scrolling="no" frameborder="0" webkitallowfullscreen="true" mozallowfullscreen="true" allowfullscreen="true"></iframe>
+	<p id='p1' class = fixed1></p>
+	<p id='p2' class = fixed2></p>
 	<div id='Div1' ></div>
 	<div id='Div2' ></div>
 	<div id='Div3' ></div>
 	<div id='Div4' ></div>
+	<div id='Div5' ></div>
+	
 	
 	
 	
