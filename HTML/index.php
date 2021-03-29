@@ -1,49 +1,118 @@
-<?php
-	session_start();
-?>
 <html>
 <head>
 	<meta charset='utf-8' />
-	 <link rel='stylesheet' href='CSS/graph.css'>
-	 <script>
-
-	 	var timer = setInterval(myTimer, 1000);
-		function myTimer() {
-			var xmlhttp = new XMLHttpRequest();
-        	xmlhttp.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-                eval(this.responseText);
-            }
-			
-        	};
-			xmlhttp.open("GET", "JS/graph.php", true);
-        	xmlhttp.send();
-		}	
-	</script>
+	<link rel="stylesheet" href="CSS/graph.css">
 </head>
 
 <body>
 	
 	<h1 style="text-align:center;"> Mikó </h1> 
-	<iframe src="http://89.46.239.103:8000/player.html" name="restreamer-player" width="800" height="450" scrolling="no" frameborder="0" webkitallowfullscreen="true" mozallowfullscreen="true" allowfullscreen="true"></iframe>
-	<p id='p1' class = fixed1></p>
-	<p id='p2' class = fixed2></p>
-	<div id='Div1' ></div>
-	<div id='Div2' ></div>
-	<div id='Div3' ></div>
-	<div id='Div4' ></div>
-	<div id='Div5' ></div>
-	
-	
-	
-	
-	
 
+	<form method = "post">
+  	<label for="fname">Trace1:</label>
+  	<select name="data1" id="data1">
+		<option value="pressure">pressure</option>
+		<option value="temperature">temperature</option>
+		<option value="humidity">humidity</option>
+		<option value="gyro_x">gyroscope_x</option>
+		<option value="gyro_y">gyroscope_y</option>
+		<option value="gyro_z">gyroscope_z</option>
+		<option value="uv_index">uv_index</option>
+		<option value="ir_light">ir_light</option>
+		<option value="visible_light">visible_light</option>
+		<option value="eco2">eco2</option>
+		<option value="tvoc">tvoc</option>
+		<option value="acc_x">acceleration_x</option>
+		<option value="acc_y">acceleration_y</option>
+		<option value="acc_z">acceleration_z</option>
+		<option value="mag_x">magnetometer_x</option>
+		<option value="mag_y">magnetometer_y</option>
+		<option value="mag_z">magnetometer_z</option>
+		<option value="latitude">latitude</option>
+		<option value="longitude">longitude</option>
+		<option value="altitude">altitude</option>
+		<option value="speed">speed</option>
+		
+	</select>
+
+	<label for="fname">Trace2:</label>
+  	<select name="data2" id="data2">
+		<option value="pressure">pressure</option>
+		<option value="temperature">temperature</option>
+		<option value="humidity">humidity</option>
+		<option value="gyro_x">gyroscope_x</option>
+		<option value="gyro_y">gyroscope_y</option>
+		<option value="gyro_z">gyroscope_z</option>
+		<option value="uv_index">uv_index</option>
+		<option value="ir_light">ir_light</option>
+		<option value="visible_light">visible_light</option>
+		<option value="eco2">eco2</option>
+		<option value="tvoc">tvoc</option>
+		<option value="acc_x">acceleration_x</option>
+		<option value="acc_y">acceleration_y</option>
+		<option value="acc_z">acceleration_z</option>
+		<option value="mag_x">magnetometer_x</option>
+		<option value="mag_y">magnetometer_y</option>
+		<option value="mag_z">magnetometer_z</option>
+		<option value="latitude">latitude</option>
+		<option value="longitude">longitude</option>
+		<option value="altitude">altitude</option>
+		<option value="speed">speed</option>
+		
+	</select>
+
+	<label for="fname">Trace3:</label>
+  	<select name="data3" id="data3">
+		<option value="pressure">pressure</option>
+		<option value="temperature">temperature</option>
+		<option value="humidity">humidity</option>
+		<option value="gyro_x">gyroscope_x</option>
+		<option value="gyro_y">gyroscope_y</option>
+		<option value="gyro_z">gyroscope_z</option>
+		<option value="uv_index">uv_index</option>
+		<option value="ir_light">ir_light</option>
+		<option value="visible_light">visible_light</option>
+		<option value="eco2">eco2</option>
+		<option value="tvoc">tvoc</option>
+		<option value="acc_x">acceleration_x</option>
+		<option value="acc_y">acceleration_y</option>
+		<option value="acc_z">acceleration_z</option>
+		<option value="mag_x">magnetometer_x</option>
+		<option value="mag_y">magnetometer_y</option>
+		<option value="mag_z">magnetometer_z</option>
+		<option value="latitude">latitude</option>
+		<option value="longitude">longitude</option>
+		<option value="altitude">altitude</option>
+		<option value="speed">speed</option>
+		
+	</select>
+	<br/>
+	<input type="submit" value=Submit>
+	</form>
+	<h2 id='p01' style="text-align:center"></h2>
+	<p id='p1'></p>
+	<div id='Div1' ></div>
+	<h2 id='p02' style="text-align:center"></h2>
+	<p id='p2'></p>
+	<div id='Div2' ></div>
 	<script src='JS/plotly-latest.min.js'></script>
-	
+	<?php
+	if(isset($_REQUEST["data1"],$_REQUEST["data2"],$_REQUEST["data3"]))
+	{
+		echo '
+		<script>
+			var xmlhttp = new XMLHttpRequest();
+			xmlhttp.onreadystatechange = function() {
+			if (this.readyState == 4 && this.status == 200) {
+				eval(this.responseText);
+			}
+			};
+			xmlhttp.open("GET", "JS/graph.php?data1='.$_REQUEST["data1"].'&data2='.$_REQUEST["data2"].'&data3='.$_REQUEST["data3"].'", true);
+			xmlhttp.send();
+		</script>
+		';
+	}
+	?>
 	
 </body>
 </html>
-<?php
-	session_destroy();
-?>
