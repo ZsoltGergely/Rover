@@ -5,8 +5,8 @@
 </head>
 
 <body>
-	
-	<h1 style="text-align:center;"> Mikó </h1> 
+
+	<h1 style="text-align:center;"> Mikó </h1>
 
 	<form method = "post">
   	<label for="fname">Trace1:</label>
@@ -32,7 +32,10 @@
 		<option value="longitude">longitude</option>
 		<option value="altitude">altitude</option>
 		<option value="speed">speed</option>
-		
+        <option value="acc">acc</option>
+		<option value="gyro">gyro</option>
+		<option value="mag">mag</option>
+
 	</select>
 
 	<label for="fname">Trace2:</label>
@@ -58,7 +61,10 @@
 		<option value="longitude">longitude</option>
 		<option value="altitude">altitude</option>
 		<option value="speed">speed</option>
-		
+        <option value="acc">acc</option>
+		<option value="gyro">gyro</option>
+		<option value="mag">mag</option>
+
 	</select>
 
 	<label for="fname">Trace3:</label>
@@ -84,7 +90,10 @@
 		<option value="longitude">longitude</option>
 		<option value="altitude">altitude</option>
 		<option value="speed">speed</option>
-		
+        <option value="acc">acc</option>
+		<option value="gyro">gyro</option>
+		<option value="mag">mag</option>
+
 	</select>
 	<br/>
 	<input type="submit" value=Submit>
@@ -113,6 +122,6 @@
 		';
 	}
 	?>
-	
+
 </body>
 </html>
