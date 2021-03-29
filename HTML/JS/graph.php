@@ -33,38 +33,45 @@ class Graph2D
     public $name0;
     public $name1;
     public $name2;
+    public $name3;
     public $t0;
     public $t1;
     public $t2;
+    public $t3;
     public $t_x ;
     public $color0;
     public $color1;
     public $color2;
+    public $color3;
     public $trace0;
     public $trace1;
     public $trace2;
+    public $trace3;
     public $data;
     public $layout;
     public $config;
 
-    function __construct($div,$mode,$name0,$name1,$name2,$color0,$color1,$color2,$m0,$m1,$m2,$time,$table) {
+    function __construct($div,$mode,$name0,$name1,$name2,$name3,$color0,$color1,$color2,$color3,$m0,$m1,$m2,$m3,$time,$table) {
             
             $this->div = $div;
             $this->mode = $mode;
             $this->name0 = $name0;
             $this->name1 = $name1;
             $this->name2 = $name2;
+            $this->name3 = $name3;
             $tmpx = array();
             $tmp0 =array();
             $tmp1 = array();
             $tmp2 = array();
+            $tmp3 = array();
             $this->color0 = $color0;
             $this->color1 = $color1;
             $this->color2 = $color2;
+            $this->color3 = $color3;
 
             #$con=mysqli_connect("exo.xdd.ro","exo","q1w2e3r4t5","exo") or die("adatbazis_hiba");
             global $con;
-            $queryString='select '.$this->name0.','.$this->name1.','.$this->name2.',time from '.$table.' order by time;';
+            $queryString='select '.$this->name0.','.$this->name1.','.$this->name2.','.$this->name3.',time from '.$table.' order by time;';
             $res=mysqli_query($con,$queryString);
 
             if($res)
@@ -75,12 +82,14 @@ class Graph2D
                     array_push($tmp0,$sor[$this->name0]);	
                     array_push($tmp1,$sor[$this->name1]);
                     array_push($tmp2,$sor[$this->name2]);
+                    array_push($tmp3,$sor[$this->name3]);
                 }
             }
             $this->t_x=data($tmpx);
             $this->t0=data($tmp0);
             $this->t1=data($tmp1);
             $this->t2=data($tmp2);
+            $this->t3=data($tmp3);
 
             $this->trace0='{
                 type: "scatter",
@@ -133,6 +142,24 @@ class Graph2D
                 marker: {
                     size: 2,
                     color:"'.$this->color2.'",
+                    
+                    }
+                    
+                }';
+            $this->trace3='{
+                type: "scatter",
+                mode:"'.$this->mode.'",
+                name:"'.$this->name3.'('.$m3.')",
+                x:['.$this->t_x.'],
+                y:['.$this->t3.'],
+                line: {
+                    width: 1,
+                    color:"'.$this->color3.'",
+                    shape: "spline"
+                    },
+                marker: {
+                    size: 2,
+                    color:"'.$this->color3.'",
                     
                     }
                     
@@ -196,7 +223,7 @@ class Graph2D
                 responsive: true,
                 displaylogo:false
             }';
-            $this->data='['.$this->trace0.','.$this->trace1.','.$this->trace2.']';
+            $this->data='['.$this->trace0.','.$this->trace1.','.$this->trace2.','.$this->trace3.']';
             echo '
             Plotly.newPlot("'.$div.'",'.$this->data.','.$this->layout.','.$this->config.');
             ';
@@ -223,16 +250,20 @@ $M = array(
     "mag_x"=>"mT",
     "mag_y"=>"mT",
     "mag_z"=>"mT",
-    "latitude"=>"",
-    "longitude"=>"",
+    "latitude"=>"decimal degrees",
+    "longitude"=>"decimal degrees",
     "altitude"=>"m",
-    "speed"=>"m/s"
+    "speed"=>"m/s",
+    "acc"=>"g",
+    "gyro"=>"dps",
+    "mag"=>"mT"
     
 
 );
 $data1 = $_REQUEST["data1"];
 $data2 = $_REQUEST["data2"];
 $data3 = $_REQUEST["data3"];
+$data3 = $_REQUEST["data4"];
 
 $queryString='select min(time) from sensor_data_01';
 $res=mysqli_query($con,$queryString);
@@ -243,7 +274,7 @@ echo'
 ';
 $time0 = datum($x['min(time)']);
 
-$Graph = new Graph2D('Div1','lines+markers',$_REQUEST["data1"],$_REQUEST["data2"],$_REQUEST["data3"],'red','green','blue',$M[$_REQUEST["data1"]],$M[$_REQUEST["data2"]],$M[$_REQUEST["data3"]],$time0,"sensor_data_01");
+$Graph = new Graph2D('Div1','lines+markers',$_REQUEST["data1"],$_REQUEST["data2"],$_REQUEST["data3"],$_REQUEST["data4"],'red','green','blue','purple',$M[$_REQUEST["data1"]],$M[$_REQUEST["data2"]],$M[$_REQUEST["data3"]],$M[$_REQUEST["data4"]],$time0,"sensor_data_01");
 $queryString='select min(time) from sensor_data_2';
 $res=mysqli_query($con,$queryString);
 $x=mysqli_fetch_assoc($res);
@@ -252,6 +283,6 @@ echo'
     document.getElementById("p2").innerHTML = "First data arrived at: '.$x['min(time)'].' ";
 ';
 $time0 = datum($x['min(time)']);
-$Graph = new Graph2D('Div2','lines+markers',$_REQUEST["data1"],$_REQUEST["data2"],$_REQUEST["data3"],'red','green','blue',$M[$_REQUEST["data1"]],$M[$_REQUEST["data2"]],$M[$_REQUEST["data3"]],$time0,"sensor_data_2");
+$Graph = new Graph2D('Div2','lines+markers',$_REQUEST["data1"],$_REQUEST["data2"],$_REQUEST["data3"],$_REQUEST["data4"],'red','green','blue','purple',$M[$_REQUEST["data1"]],$M[$_REQUEST["data2"]],$M[$_REQUEST["data3"]],$M[$_REQUEST["data4"]],$time0,"sensor_data_2");
 
 ?>
