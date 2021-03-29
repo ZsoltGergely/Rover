@@ -36,19 +36,23 @@ Valid_commands =[
 "Arm_Back()",
 "Arm_Left()",
 "Arm_Right()",
-"Camera_Up()",
-"Camera_Down()"
+"setCam()",
+"setArm()"
 ]
 
 def line_valid(command):
     print(command)
     split = command.split("(")
+    print("Trying: " + split[0]+"()")
     if split[0]+"()" in Valid_commands:
-        try:
-            int(split[1][:-1])
+        if split[0]+"()" == "setArm()":
             return True
-        except ValueError:
-            return False
+        else:
+            try:
+                int(split[1][:-1])
+                return True
+            except ValueError:
+                return False
 
 class Command_class:
     def __init__(self, id, command):
