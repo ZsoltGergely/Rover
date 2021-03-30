@@ -7,7 +7,7 @@
 <body>
 	
 	<h1 style="text-align:center;"> Mikó </h1> 
-	<p><a href="https://www.youtube.com/watch?v=pmE20V8H2Y4&list=PLNS3aSu6iQAVwH8XDAT-jYIKXt3ivJpmy">You can rewatch our stream HERE!</a></p>
+	<p>You can rewatch our videostream <a href="https://www.youtube.com/watch?v=pmE20V8H2Y4&list=PLNS3aSu6iQAVwH8XDAT-jYIKXt3ivJpmy">HERE!</a></p>
 
 	<form method = "post">
   	<label for="fname">Trace1:</label>
